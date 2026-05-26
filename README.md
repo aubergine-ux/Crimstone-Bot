@@ -2,7 +2,7 @@
 
 A Discord bot built with [Discord.js](https://discord.js.org/)! ~ invite it to your server and get started instantly.
 
-🌐 **Website:** *(coming soon)*
+🌐 **Website:** [crim.aubergineux.com](https://crim.aubergineux.com/)
 
 📨 **Invite Crim:** [Add to your server](#) *(link coming soon)*
 
