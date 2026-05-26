@@ -1,4 +1,6 @@
-# Crim
+<img width="80" height="80" alt="logo" src="https://github.com/user-attachments/assets/4d8bf52e-7158-4947-9fa9-bb7872ebbbc9" />
+
+# Crim 
 
 A Discord bot built with [Discord.js](https://discord.js.org/)! ~ invite it to your server and get started instantly.
 
