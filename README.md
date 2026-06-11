@@ -4,17 +4,16 @@ A Discord bot built with [Discord.js](https://discord.js.org/)! ~ invite it to y
 
 🌐 **Website:** [crim.aubergineux.com](https://crim.aubergineux.com/)
 
-📨 **Invite Crim:** [Add to your server](#) *(link coming soon)*
+📨 **Invite Crim:** [Add to your server](https://discord.com/oauth2/authorize?client_id=1507721065235877958)
 
 ---
 
 ## Features
 
-- **Moderation** — Ban, kick, timeout, and purge messages
-- **Info** — Get info about a user or server
-- **Utility** — Echo, ping, Minecraft server status, Minecraft skins, and more
-- **Fun** — Random dog pictures, gifs, and more
-
+- **Moderation** - Complete server management with `ban`, `kick`, `timeout`, `purge` messages, and `echo` tools.
+- **Tools** - Minecraft tracking integrations, including checking server statuses (`mcstatus`) and retrieving user avatar textures (`mcskin`).
+- **Utility** - Essential client diagnostics including `ping`, `avatar` lookup, `server` info, `user` profiles, a quick reference `guide`, and automated command hot-reloads (`reload`).
+- **Fun** - Interactive server games and entertainment commands, including responsive search setups for `gif` animations and `ping`.
 ---
 
 ## Self Hosting
