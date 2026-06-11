@@ -1,10 +1,10 @@
-# Crim
+# Crimstone
 
 A Discord bot built with [Discord.js](https://discord.js.org/)! ~ invite it to your server and get started instantly.
 
 🌐 **Website:** [crim.aubergineux.com](https://crim.aubergineux.com/)
 
-📨 **Invite Crim:** [Add to your server](https://discord.com/oauth2/authorize?client_id=1507721065235877958)
+📨 **Invite Crimstone:** [Add to your server](https://discord.com/oauth2/authorize?client_id=1507721065235877958)
 
 ---
 
@@ -26,12 +26,6 @@ A Discord bot built with [Discord.js](https://discord.js.org/)! ~ invite it to y
 1. Clone the repo and run `npm install`
 2. Create `config.json` and `.env` with your bot token and client ID
 3. Run `node deploy-commands.js` to register commands
-4. Start the bot with `node --env-file=.env index.js`
-
----
-
-## Credits
-
-- Website template by [RedolentHalo](https://github.com/redolenthalo/discord-bot-website-template)!
+4. Start the bot with `node index.js`
 
 ---
