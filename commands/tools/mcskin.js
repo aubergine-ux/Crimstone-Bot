@@ -14,7 +14,7 @@ module.exports = {
             .setTitle( `Skin of ${name}`)
             .setImage(`https://minotar.net/armor/body/${name}/700.png`)
             .setColor(0x5865F2)
-            .setFooter({ text: 'Powered by Minotar' });
+            .setFooter({ text: 'Skins Powered by Minotar' });
 
         await interaction.reply({ embeds: [embed] });
     },
