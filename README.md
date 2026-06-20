@@ -29,6 +29,3 @@ A Discord bot built with [Discord.js](https://discord.js.org/)! ~ invite it to y
 4. Start the bot with `node index.js`
 
 ---
-
-## License
-Crimstone Bot is licensed under the GNU General Public License v3 (GPL v3) ~ see the [LICENSE](LICENSE) file for details. 

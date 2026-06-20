@@ -1,5 +1,4 @@
 const { Events } = require('discord.js');
-const { execute } = require('../commands/fun/ping');
 
 module.exports = {
     name: Events.MessageCreate,
@@ -12,8 +11,8 @@ module.exports = {
                 await message.react('6️⃣');
                 await message.react('7️⃣');
             } catch (error) {
-                console.error('Failed to 67 Properly:, error');
+                console.error('Failed to 67 Properly:', error);
             }
         }
     }
-}
+};
