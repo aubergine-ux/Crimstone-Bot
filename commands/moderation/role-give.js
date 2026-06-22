@@ -17,7 +17,7 @@ module.exports = {
 
     async execute(interaction) {
         const targetUser = interaction.options.getUser('target');
-        const role = interaction.options.getrole('role');
+        const role = interaction.options.getRole('role');
 
         const targetMember = await interaction.guild.members.fetch(targetUser.id).catch(() => null);
 
