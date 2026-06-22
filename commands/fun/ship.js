@@ -47,10 +47,10 @@ module.exports = {
         }
 
         await interaction.reply({
-        content: `🧪 **Matchmaker Results** 🧪\n` +
+        content: `**Matchmaking Results**\n` +
                  `**${user1.username}** x **${user2.username}**\n\n` +
-                 `▶️ **Ship Name:** \`${finalShipName}\`\n` +
-                 `▶️ **Compatibility:** ${lovePercentage}% ${emoji}\n\n` +
+                 `**Ship Name:** \`${finalShipName}\`\n` +
+                 `**Compatibility:** ${lovePercentage}% ${emoji}\n\n` +
                  `*${reaction}*`
         });
     }
