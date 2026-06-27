@@ -1,9 +1,8 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 
 module.exports = {
-    // 1. This sets up how the command looks inside Discord
     data: new SlashCommandBuilder()
-        .setName('warn') // Must be lowercase, no spaces
+        .setName('warn')
         .setDescription('Sends a Server User a Warning')
         .addUserOption(option =>
             option.setName('target').setDescription('The User to be Warned.').setRequired(true))
@@ -11,7 +10,6 @@ module.exports = {
             option.setName('reason').setDescription('The Reason for the Warning').setRequired(true))
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages),
     
-    // 2. This is what happens when someone types the command
     async execute(interaction) {
 
         const user = interaction.options.getUser('target');

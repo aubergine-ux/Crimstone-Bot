@@ -1,15 +1,12 @@
 const { SlashCommandBuilder } = require('discord.js');
 
 module.exports = {
-    // 1. Define the command configuration
     data: new SlashCommandBuilder()
-        .setName('uptime') // Must be lowercase, no spaces
+        .setName('uptime')
         .setDescription('View Crimstone`s Uptime'),
 
-    // 2. Define the execution logic
     async execute(interaction) {
         try {
-            // Your command logic goes here!
             
             let totalSeconds = (interaction.client.uptime / 1000);
 
@@ -24,8 +21,6 @@ module.exports = {
 
             const uptimeString = `**Uptime:** ${days}d ${hours}h ${minutes}m ${seconds}s`;
 
-
-            // Reply to the user
             await interaction.reply({ content: uptimeString });
             
         } catch (error) {
