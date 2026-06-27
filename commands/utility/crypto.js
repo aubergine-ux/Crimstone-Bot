@@ -12,6 +12,9 @@ module.exports = {
                     { name: 'Bitcoin (BTC)', value: 'bitcoin' },
                     { name: 'Ethereum (ETH)', value: 'ethereum' },
                     { name: 'Solana (SOL)', value: 'solana' },
+                    { name: 'XRP', value: 'xrp' },
+                    { name: 'Monero (XMR)', value: 'monero' },
+                    { name: 'Hyperliquid (HYPE)', value: 'hyperliquid' },
                     { name: 'Cardano (ADA)', value: 'cardano' }
                 )
         ),
