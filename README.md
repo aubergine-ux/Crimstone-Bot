@@ -3,7 +3,6 @@
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 ![Discord.js](https://img.shields.io/badge/Discord.js-5865F2?style=for-the-badge&logo=discord&logoColor=white)
 ![Made with Love](https://img.shields.io/badge/Made%20with-Love-ff69b4?style=for-the-badge)
-![GitHub last commit](https://img.shields.io/github/last-commit/aubergine-ux/Crimstone-Bot?style=for-the-badge)
 
 A Discord bot built with [Discord.js](https://discord.js.org/)! ~ invite it to your server and get started instantly.
 
