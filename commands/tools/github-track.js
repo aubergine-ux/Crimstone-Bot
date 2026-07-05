@@ -11,7 +11,7 @@ module.exports = {
         )
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageWebhooks),
     async execute(interaction) {
-        const repoUrl = interaction.option.getString('repository_url');
+        const repoUrl = interaction.options.getString('repository_url');
         const channel = interaction.channel;
 
         await interaction.deferReply({ ephemeral: true });
@@ -26,7 +26,7 @@ module.exports = {
             const githubCompatibleUrl = `${webhook.url}/github`;
 
             await interaction.editReply({
-                content: `###Webhook Created Successfully!\n` +
+                content: `Webhook Created Successfully!\n` +
                          `I have set up a tracking hook for this channel. To activate the live feed, follow these steps:\n\n` +
                          `**1:** Go to your GitHub Repository.\n` +
                          `**2:** Click **Settings** -> **Webhooks** -> **Add Webhook**.\n` +
