@@ -2,11 +2,11 @@ const { SlashCommandBuilder } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
-        .setName('stars')
+        .setName('github-stars')
         .setDescription('Check how many Stars a GitHub Repo has')
         .addStringOption(option =>
             option.setName('repo')
-                .setDescription('The Repo in owner/name format, e.g. discordjs/discord.js')
+                .setDescription('The Repo in owner/name format')
                 .setRequired(true)
         ),
 
@@ -15,7 +15,7 @@ module.exports = {
         const repoInput = interaction.options.getString('repo');
 
         if (!repoInput.includes('/')) {
-            return await interaction.reply({ content: 'Please use the format `owner/repo`, e.g. `discordjs/discord.js`.', ephemeral: true });
+            return await interaction.reply({ content: 'Please use the format `owner/repo`.', ephemeral: true });
         }
 
         await interaction.deferReply();
