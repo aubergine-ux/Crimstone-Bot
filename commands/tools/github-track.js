@@ -29,6 +29,7 @@ module.exports = {
                 content: `Webhook Created Successfully!\n` +
                          `I have set up a tracking hook for this channel. To activate the live feed, follow these steps:\n\n` +
                          `**1:** Go to your GitHub Repository.\n` +
+                         
                          `**2:** Click **Settings** -> **Webhooks** -> **Add Webhook**.\n` +
                          `**3:** Paste this exact link into the **Payload URL** field:\n` +
                          `\`\`\`\n${githubCompatibleUrl}\n\`\`\`\n` +
