@@ -10,14 +10,23 @@ A Discord bot built with [Discord.js](https://discord.js.org/)! ~ invite it to y
 
 📨 **Invite Crimstone:** [Add to your server](https://discord.com/oauth2/authorize?client_id=1507721065235877958)
 
+<table align="center">
+<tr>
+<td><img src="https://github.com/user-attachments/assets/94820dd8-43c8-41b7-8bc4-2afe060160f6" height="200" alt="Weather command" /></td>
+<td><img src="https://github.com/user-attachments/assets/673df305-807f-4760-820d-a9c172139c0f" height="200" alt="MC status command" /></td>
+</tr>
+</table>
+
 ---
 
 ## Features
 
-- **Moderation** - Complete server management with `ban`, `kick`, `timeout`, `purge` messages, and `echo` tools.
-- **Tools** - Minecraft tracking integrations, including checking server statuses (`mcstatus`) and retrieving user avatar textures (`mcskin`).
-- **Utility** - Essential client diagnostics including `ping`, `avatar` lookup, `server` info, `user` profiles, a quick reference `guide`, and automated command hot-reloads (`reload`).
-- **Fun** - Interactive server games and entertainment commands, including responsive search setups for `gif` animations and `ping`.
+- **Moderation** - Full server management: `ban`, `kick`, `mute`, `timeout`, `purge`, `slowmode`, and role tools (`role-give`, `role-remove`, `role-search`).
+- **Music** *(W.I.P)* - Play audio in voice channels with `play`, `stop`, `skip`, and `queue`.
+- **Tools** - Handy integrations like `github-track` for repo updates, plus Minecraft lookups via `mcstatus` and `mcskin`.
+- **Fun** - Games and entertainment: `catfact`, `coinflip`, `gif`, `meow`, `mrrp`, `ping`, `roll`, and `ship`.
+- **Utility** - Everyday helpers including `avatar`, `server` and `user` info, `weather`, `crypto` prices, `announce`, `echo`, `uptime`, `guide`, `info`, and `reload`.
+
 ---
 
 ## Self Hosting
