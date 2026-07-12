@@ -14,6 +14,9 @@ module.exports = {
 			status: PresenceUpdateStatus.Online,
 		});
 
+		applyPresence();
+		setInterval(applyPresence, 10 * 60 * 1000);
+
 		setInterval(async () => {
 			const url = "http://192.168.1.157:3001/api/push/c55euiUf9v?status=up&msg=OK&ping=";
 			try {
