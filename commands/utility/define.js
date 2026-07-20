@@ -1,10 +1,10 @@
-const { SlashCommandBuilder, EmbedBuilder } = required('discord.js')
+const { SlashCommandBuilder, EmbedBuilder } = require('discord.js')
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('define')
         .setDescription('Search up the Definition of a Word!')
-        .addStringOPtion(option =>
+        .addStringOption(option =>
             option.setName('word')
                 .setDescription('The Word you want to search up')
                 .setRequired(true)
