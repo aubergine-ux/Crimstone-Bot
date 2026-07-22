@@ -1,7 +1,7 @@
 const { Events } = require('discord.js');
-const { readAfk, writeAfk } = require('../utility/afkStore.js');
-const { readLevels, writeLevels } = require('../utility/levelStore.js');
-const { getLevelFromXp } = require('../utility/levelMath.js');
+const { readAfk, writeAfk } = require('../commands/utility/afkStore.js');
+const { readLevels, writeLevels } = require('../commands/utility/levelStore.js');
+const { getLevelFromXp } = require('../commands/utility/levelMath.js');
 
 const xpCooldowns = new Map();
 
