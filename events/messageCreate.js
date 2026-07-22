@@ -30,7 +30,7 @@ module.exports = {
             const cooldownKey = `${message.guild.id}-${message.author.id}`;
             const lastXp = xpCooldowns.get(cooldownKey) || 0;
 
-            if (now - lastXp > 60000) {
+            if (now - lastXp > 10000) {
                 xpCooldowns.set(cooldownKey, now);
 
                 const levels = readLevels();
@@ -41,7 +41,7 @@ module.exports = {
 
                 const before = getLevelFromXp(levels[guildId][message.author.id]);
 
-                const gained = Math.floor(Math.random() * 11) + 15;
+                const gained = Math.floor(Math.random() * 21) + 40;
                 levels[guildId][message.author.id] += gained;
 
                 const after = getLevelFromXp(levels[guildId][message.author.id]);
