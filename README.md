@@ -7,7 +7,6 @@
 A Discord bot built with [Discord.js](https://discord.js.org/)! ~ invite it to your server and get started instantly.
 
 🌐 **Website:** [crim.aubergineux.com](https://crim.aubergineux.com/)
-
 📨 **Invite Crimstone:** [Add to your server](https://discord.com/oauth2/authorize?client_id=1507721065235877958)
 
 <table align="center">
@@ -20,12 +19,12 @@ A Discord bot built with [Discord.js](https://discord.js.org/)! ~ invite it to y
 ---
 
 ## Features
-
-- **Moderation** - Full server management: `ban`, `kick`, `mute`, `timeout`, `purge`, `slowmode`, and role tools (`role-give`, `role-remove`, `role-search`).
+- **Moderation** - Full server management: `ban`, `kick`, `timeout`, `purge`, `slowmode`, `nickname`, warnings (`warn`, `unwarn`, `warnings`), and role tools (`role-give`, `role-remove`, `role-search`).
+- **Leveling** - Track activity with `rank` and `leaderboard`, plus admin controls via `givexp` and `setxp`.
 - **Music** *(W.I.P)* - Play audio in voice channels with `play`, `stop`, `skip`, and `queue`.
-- **Tools** - Handy integrations like `github-track` for repo updates, plus Minecraft lookups via `mcstatus` and `mcskin`.
+- **Tools** - Handy integrations like `github-track` and `github-stars` for repos, plus Minecraft lookups via `mcstatus` and `mcskin`.
 - **Fun** - Games and entertainment: `catfact`, `coinflip`, `gif`, `meow`, `mrrp`, `ping`, `roll`, and `ship`.
-- **Utility** - Everyday helpers including `avatar`, `server` and `user` info, `weather`, `crypto` prices, `announce`, `echo`, `uptime`, `guide`, `info`, and `reload`.
+- **Utility** - Everyday helpers including `avatar`, `server` and `user` info, `weather`, `crypto` prices, `define`, `hex`, `poll`, `afk`, `announce`, `echo`, `uptime`, `guide`, `info`, and `reload`.
 
 ---
 
