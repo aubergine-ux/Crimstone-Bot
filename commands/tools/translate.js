@@ -6,7 +6,7 @@ module.exports = {
         .setDescription('Translate text into another language.')
         .addStringOption(option =>
             option.setName('text')
-                .setDescription('The text to translate')
+                .setDescription('The text to Translate')
                 .setRequired(true))
         .addStringOption(option =>
             option.setName('to')
@@ -49,7 +49,7 @@ module.exports = {
         } catch (error) {
             console.error(error);
             await interaction.editReply({
-                content: '❌ Translation failed. The service may be down or the text couldn\'t be translated.'
+                content: '❌ Translation failed. The service may be down or the text couldn\'t be Translated.'
             });
         }
     }
