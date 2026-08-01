@@ -3,29 +3,22 @@
 ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
 ![Discord.js](https://img.shields.io/badge/Discord.js-5865F2?style=for-the-badge&logo=discord&logoColor=white)
 ![Made with Love](https://img.shields.io/badge/Made%20with-Love-ff69b4?style=for-the-badge)
+![GitHub last commit](https://img.shields.io/github/last-commit/aubergine-ux/Crimstone-Bot?style=for-the-badge)
 
 A Discord bot built with [Discord.js](https://discord.js.org/)! ~ invite it to your server and get started instantly.
 
 🌐 **Website:** [crim.aubergineux.com](https://crim.aubergineux.com/)
-📨 **Invite Crimstone:** [Add to your server](https://discord.com/oauth2/authorize?client_id=1507721065235877958)
 
-<table align="center">
-<tr>
-<td><img src="https://github.com/user-attachments/assets/94820dd8-43c8-41b7-8bc4-2afe060160f6" height="200" alt="Weather command" /></td>
-<td><img src="https://github.com/user-attachments/assets/673df305-807f-4760-820d-a9c172139c0f" height="200" alt="MC status command" /></td>
-</tr>
-</table>
+📨 **Invite Crimstone:** [Add to your server](https://discord.com/oauth2/authorize?client_id=1507721065235877958)
 
 ---
 
 ## Features
-- **Moderation** - Full server management: `ban`, `kick`, `timeout`, `purge`, `slowmode`, `nickname`, warnings (`warn`, `unwarn`, `warnings`), and role tools (`role-give`, `role-remove`, `role-search`).
-- **Leveling** - Track activity with `rank` and `leaderboard`, plus admin controls via `givexp` and `setxp`.
-- **Music** *(W.I.P)* - Play audio in voice channels with `play`, `stop`, `skip`, and `queue`.
-- **Tools** - Handy integrations like `github-track` and `github-stars` for repos, plus Minecraft lookups via `mcstatus` and `mcskin`.
-- **Fun** - Games and entertainment: `catfact`, `coinflip`, `gif`, `meow`, `mrrp`, `ping`, `roll`, and `ship`.
-- **Utility** - Everyday helpers including `avatar`, `server` and `user` info, `weather`, `crypto` prices, `define`, `hex`, `poll`, `afk`, `announce`, `echo`, `uptime`, `guide`, `info`, and `reload`.
 
+- **Moderation** - Complete server management with `ban`, `kick`, `timeout`, `purge` messages, and `echo` tools.
+- **Tools** - Minecraft tracking integrations, including checking server statuses (`mcstatus`) and retrieving user avatar textures (`mcskin`).
+- **Utility** - Essential client diagnostics including `ping`, `avatar` lookup, `server` info, `user` profiles, a quick reference `guide`, and automated command hot-reloads (`reload`).
+- **Fun** - Interactive server games and entertainment commands, including responsive search setups for `gif` animations and `ping`.
 ---
 
 ## Self Hosting

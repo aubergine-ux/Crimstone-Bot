@@ -16,11 +16,19 @@ module.exports = {
         if (afk[message.author.id]) {
             delete afk[message.author.id];
             writeAfk(afk);
-            await message.reply('👋 Welcome back! I removed your AFK.');
+            try {
+                await message.reply('👋 Welcome back! I removed your AFK.');
+            } catch (error) {
+                console.error('Failed to send AFK welcome-back:', error.message);
+            }
         } else {
-            message.mentions.users.forEach(user => {
+            message.mentions.users.forEach(async user => {
                 if (afk[user.id]) {
-                    message.reply(`💤 **${user.username}** is AFK: ${afk[user.id].message}`);
+                    try {
+                        await message.reply(`💤 **${user.username}** is AFK: ${afk[user.id].message}`);
+                    } catch (error) {
+                        console.error('Failed to send AFK mention reply:', error.message);
+                    }
                 }
             });
         }
@@ -49,7 +57,11 @@ module.exports = {
                 writeLevels(levels);
 
                 if (after.level > before.level) {
-                    message.channel.send(`🎉 **${message.author.username}** reached level **${after.level}**!`);
+                    try {
+                        await message.channel.send(`🎉 **${message.author.username}** reached level **${after.level}**!`);
+                    } catch (error) {
+                        console.error('Failed to send level-up message:', error.message);
+                    }
                 }
             }
         }
