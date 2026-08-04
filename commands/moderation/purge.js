@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -15,14 +15,19 @@ module.exports = {
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages),
     async execute(interaction) {
         const amount = interaction.options.getInteger('amount');
+        const botPermissions = interaction.channel.permissionsFor(interaction.guild.members.me);
 
-        await interaction.channel.bulkDelete(amount, true);
+        if (!botPermissions.has([PermissionFlagsBits.ManageMessages, PermissionFlagsBits.ReadMessageHistory])) {
+            return interaction.reply({
+                content: 'I don\'t have permission to delete messages in this channel. I need **Manage Messages** and **Read Message History**.',
+                flags: MessageFlags.Ephemeral,
+            });
+        }
+
+        const deleted = await interaction.channel.bulkDelete(amount, true);
         await interaction.reply({
-            content: `Sucessfully deleted ${amount} mesages!`,
-            epheremal: true,
-        })
-    }
-
-
-
-}
+            content: `Successfully deleted ${deleted.size} messages!`,
+            flags: MessageFlags.Ephemeral,
+        });
+    },
+};
