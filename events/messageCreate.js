@@ -1,4 +1,4 @@
-const { Events } = require('discord.js');
+const { Events, PermissionFlagsBits } = require('discord.js');
 const { readAfk, writeAfk } = require('../commands/utility/afkStore.js');
 const { readLevels, writeLevels } = require('../commands/utility/levelStore.js');
 const { getLevelFromXp } = require('../commands/utility/levelMath.js');
@@ -56,7 +56,11 @@ module.exports = {
 
                 writeLevels(levels);
 
-                if (after.level > before.level) {
+                const canAnnounce = message.channel
+                    .permissionsFor(message.guild.members.me)
+                    ?.has(PermissionFlagsBits.SendMessages);
+
+                if (after.level > before.level && canAnnounce) {
                     try {
                         await message.channel.send(`🎉 **${message.author.username}** reached level **${after.level}**!`);
                     } catch (error) {

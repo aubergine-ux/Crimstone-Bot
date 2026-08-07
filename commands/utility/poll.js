@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, MessageFlags } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -21,9 +21,28 @@ module.exports = {
 
         await interaction.reply({embeds: [pollEmbed] });
 
-        const pollMessage = await interaction.fetchReply();
+        const me = interaction.guild?.members.me;
+        const botPermissions = me && interaction.channel.permissionsFor(me);
+        const required = [PermissionFlagsBits.AddReactions, PermissionFlagsBits.ReadMessageHistory];
 
-        await pollMessage.react('👍');
-        await pollMessage.react('👎');
+        if (botPermissions && !botPermissions.has(required)) {
+            return interaction.followUp({
+                content: 'I posted the poll, but I need **Add Reactions** and **Read Message History** in this channel to add the 👍/👎 options.',
+                flags: MessageFlags.Ephemeral,
+            });
+        }
+
+        try {
+            const pollMessage = await interaction.fetchReply();
+
+            await pollMessage.react('👍');
+            await pollMessage.react('👎');
+        } catch (error) {
+            console.error('Failed to add poll reactions:', error.message);
+            await interaction.followUp({
+                content: 'I posted the poll, but couldn\'t add the 👍/👎 reactions. Check my permissions in this channel.',
+                flags: MessageFlags.Ephemeral,
+            });
+        }
     }
 };
