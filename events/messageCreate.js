@@ -2,6 +2,7 @@ const { Events, PermissionFlagsBits } = require('discord.js');
 const { readAfk, writeAfk } = require('../commands/utility/afkStore.js');
 const { readLevels, writeLevels } = require('../commands/utility/levelStore.js');
 const { getLevelFromXp } = require('../commands/utility/levelMath.js');
+const { getConfig } = require('../commands/utility/guildConfig.js');
 
 const xpCooldowns = new Map();
 
@@ -34,37 +35,49 @@ module.exports = {
         }
 
         if (message.guild) {
-            const now = Date.now();
-            const cooldownKey = `${message.guild.id}-${message.author.id}`;
-            const lastXp = xpCooldowns.get(cooldownKey) || 0;
+            const config = getConfig(message.guild.id);
 
-            if (now - lastXp > 10000) {
-                xpCooldowns.set(cooldownKey, now);
+            if (config.xpEnabled && !config.ignoredChannels.includes(message.channel.id)) {
+                const now = Date.now();
+                const cooldownKey = `${message.guild.id}-${message.author.id}`;
+                const lastXp = xpCooldowns.get(cooldownKey) || 0;
 
-                const levels = readLevels();
-                const guildId = message.guild.id;
+                if (now - lastXp > 10000) {
+                    xpCooldowns.set(cooldownKey, now);
 
-                if (!levels[guildId]) levels[guildId] = {};
-                if (!levels[guildId][message.author.id]) levels[guildId][message.author.id] = 0;
+                    const levels = readLevels();
+                    const guildId = message.guild.id;
 
-                const before = getLevelFromXp(levels[guildId][message.author.id]);
+                    if (!levels[guildId]) levels[guildId] = {};
+                    if (!levels[guildId][message.author.id]) levels[guildId][message.author.id] = 0;
 
-                const gained = Math.floor(Math.random() * 21) + 40;
-                levels[guildId][message.author.id] += gained;
+                    const before = getLevelFromXp(levels[guildId][message.author.id]);
 
-                const after = getLevelFromXp(levels[guildId][message.author.id]);
+                    const gained = Math.floor(Math.random() * 21) + 40;
+                    levels[guildId][message.author.id] += gained;
 
-                writeLevels(levels);
+                    const after = getLevelFromXp(levels[guildId][message.author.id]);
 
-                const canAnnounce = message.channel
-                    .permissionsFor(message.guild.members.me)
-                    ?.has(PermissionFlagsBits.SendMessages);
+                    writeLevels(levels);
 
-                if (after.level > before.level && canAnnounce) {
-                    try {
-                        await message.channel.send(`🎉 **${message.author.username}** reached level **${after.level}**!`);
-                    } catch (error) {
-                        console.error('Failed to send level-up message:', error.message);
+                    if (after.level > before.level && config.levelupMode !== 'off') {
+                        let target = message.channel;
+
+                        if (config.levelupMode === 'channel') {
+                            target = message.guild.channels.cache.get(config.levelupChannel) || message.channel;
+                        }
+
+                        const canAnnounce = target
+                            .permissionsFor(message.guild.members.me)
+                            ?.has(PermissionFlagsBits.SendMessages);
+
+                        if (canAnnounce) {
+                            try {
+                                await target.send(`🎉 **${message.author.username}** reached level **${after.level}**!`);
+                            } catch (error) {
+                                console.error('Failed to send level-up message:', error.message);
+                            }
+                        }
                     }
                 }
             }
