@@ -1,5 +1,17 @@
 const { Events, MessageFlags, Collection } = require('discord.js');
 
+function formatCommand(interaction) {
+    const sub = interaction.options.getSubcommand(false);
+    const group = interaction.options.getSubcommandGroup(false);
+    const args = interaction.options.data
+        .flatMap((o) => o.options ?? o)
+        .flatMap((o) => o.options ?? o)
+        .map((o) => `${o.name}:${o.value}`)
+        .join(' ');
+
+    return `/${interaction.commandName}${group ? ` ${group}` : ''}${sub ? ` ${sub}` : ''}${args ? ` ${args}` : ''}`;
+}
+
 module.exports = {
     name: Events.InteractionCreate,
     async execute(interaction) {
@@ -36,10 +48,17 @@ module.exports = {
         timestamps.set(interaction.user.id, now);
         setTimeout(() => timestamps.delete(interaction.user.id), cooldownAmount);
 
+        console.log(
+            `[CMD] ${new Date().toISOString()} | ` +
+            `${interaction.user.tag} (${interaction.user.id}) | ` +
+            `${interaction.guild?.name ?? 'DM'} #${interaction.channel?.name ?? '-'} | ` +
+            formatCommand(interaction)
+        );
+
         try {
             await command.execute(interaction);
         } catch (error) {
-            console.error(error);
+            console.error(`[CMD ERROR] ${interaction.commandName} by ${interaction.user.tag}:`, error);
             if (interaction.replied || interaction.deferred) {
                 await interaction.followUp({
                     content: 'There was an error while executing this command!',
