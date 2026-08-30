@@ -3,38 +3,76 @@ const fs = require('fs');
 const path = require('path');
 
 const CATEGORIES = {
-    fun: '🎲',
-    misc: '📦',
     moderation: '🛡️',
+    leveling: '📈',
+    music: '🎵',
     tools: '🔧',
     utility: '🧰',
+    fun: '🎲',
+    misc: '📦',
 };
 
-const HIDDEN = ['command_name'];
+const ORDER = ['moderation', 'leveling', 'music', 'tools', 'utility', 'fun', 'misc'];
 
-function loadCommands() {
-    const entries = [];
+const HIDDEN = ['blankcommand'];
+
+let folderCache = null;
+
+function commandFolders() {
+    if (folderCache) return folderCache;
+
+    const map = {};
     const foldersPath = path.join(__dirname, '..');
-    const commandFolders = fs.readdirSync(foldersPath);
 
-    for (const folder of commandFolders) {
-        const commandsPath = path.join(foldersPath, folder);
-        const commandFiles = fs.readdirSync(commandsPath).filter((file) => file.endsWith('.js'));
+    fs.readdirSync(foldersPath, { withFileTypes: true }).forEach(entry => {
+        if (!entry.isDirectory()) return;
 
-        for (const file of commandFiles) {
-            const command = require(path.join(commandsPath, file));
+        const commandsPath = path.join(foldersPath, entry.name);
 
-            if ('data' in command && 'execute' in command && !HIDDEN.includes(command.data.name)) {
-                entries.push({ folder: folder, data: command.data.toJSON() });
-            }
-        }
-    }
+        fs.readdirSync(commandsPath)
+            .filter(file => file.endsWith('.js'))
+            .forEach(file => {
+                try {
+                    const command = require(path.join(commandsPath, file));
 
-    return entries;
+                    if ('data' in command && 'execute' in command) {
+                        map[command.data.name] = entry.name;
+                    }
+                } catch (error) {
+                    console.error(`Help couldn't read ${file}:`, error.message);
+                }
+            });
+    });
+
+    folderCache = map;
+    return map;
 }
 
 function categoryName(folder) {
     return folder.charAt(0).toUpperCase() + folder.slice(1);
+}
+
+function chunkNames(names, limit) {
+    const chunks = [];
+    let current = [];
+    let length = 0;
+
+    names.forEach(name => {
+        const piece = `\`${name}\``;
+
+        if (length + piece.length + 1 > limit) {
+            chunks.push(current);
+            current = [];
+            length = 0;
+        }
+
+        current.push(piece);
+        length += piece.length + 1;
+    });
+
+    if (current.length > 0) chunks.push(current);
+
+    return chunks;
 }
 
 module.exports = {
@@ -48,49 +86,53 @@ module.exports = {
         ),
     async execute(interaction) {
         const commandName = interaction.options.getString('command');
-        const entries = loadCommands();
+        const folders = commandFolders();
+
+        const visible = [...interaction.client.commands.values()]
+            .filter(command => command.data && !HIDDEN.includes(command.data.name));
 
         if (commandName) {
-            const entry = entries.find(item => item.data.name === commandName.toLowerCase());
+            const cleaned = commandName.replace('/', '').trim().toLowerCase();
+            const command = visible.find(item => item.data.name === cleaned);
 
-            if (!entry) {
+            if (!command) {
                 return await interaction.reply({
-                    content: `There is no Command called \`${commandName}\`. Use \`/help\` to see them all.`,
+                    content: `There is no Command called \`${cleaned}\`. Use \`/help\` to see them all.`,
                     flags: MessageFlags.Ephemeral,
                 });
             }
 
-            const emoji = CATEGORIES[entry.folder] || '📁';
-            const options = entry.data.options || [];
+            const data = command.data.toJSON();
+            const folder = folders[data.name] || 'misc';
+            const emoji = CATEGORIES[folder] || '📁';
+            const options = data.options || [];
             const hasSubcommands = options.some(option => option.type === 1);
 
-            const permissions = entry.data.default_member_permissions
-                ? new PermissionsBitField(BigInt(entry.data.default_member_permissions)).toArray().join(', ')
+            const permissions = data.default_member_permissions
+                ? new PermissionsBitField(BigInt(data.default_member_permissions)).toArray().join(', ')
                 : 'Everyone';
 
             const fields = [
-                { name: 'Category', value: `${emoji} ${categoryName(entry.folder)}`, inline: true },
+                { name: 'Category', value: `${emoji} ${categoryName(folder)}`, inline: true },
                 { name: 'Permissions', value: permissions, inline: true },
             ];
 
             if (options.length > 0) {
-                const optionLines = [];
-
-                options.forEach(option => {
+                const optionLines = options.map(option => {
                     const suffix = hasSubcommands || option.required ? '' : ' (optional)';
-                    optionLines.push(`\`${option.name}\`${suffix} — ${option.description}`);
+                    return `\`${option.name}\`${suffix} — ${option.description}`;
                 });
 
                 fields.push({
                     name: hasSubcommands ? 'Subcommands' : 'Options',
-                    value: optionLines.join('\n'),
+                    value: optionLines.join('\n').slice(0, 1024),
                 });
             }
 
             const commandEmbed = new EmbedBuilder()
                 .setColor(0x5865F2)
-                .setTitle(`${emoji} /${entry.data.name}`)
-                .setDescription(entry.data.description)
+                .setTitle(`${emoji} /${data.name}`)
+                .setDescription(data.description)
                 .addFields(fields);
 
             return await interaction.reply({ embeds: [commandEmbed] });
@@ -98,23 +140,31 @@ module.exports = {
 
         const grouped = {};
 
-        entries.forEach(entry => {
-            if (!grouped[entry.folder]) {
-                grouped[entry.folder] = [];
-            }
+        visible.forEach(command => {
+            const folder = folders[command.data.name] || 'misc';
 
-            grouped[entry.folder].push(entry.data.name);
+            if (!grouped[folder]) grouped[folder] = [];
+
+            grouped[folder].push(command.data.name);
+        });
+
+        const sortedFolders = Object.keys(grouped).sort((a, b) => {
+            const indexA = ORDER.indexOf(a);
+            const indexB = ORDER.indexOf(b);
+            return (indexA === -1 ? 99 : indexA) - (indexB === -1 ? 99 : indexB);
         });
 
         const fields = [];
 
-        Object.keys(grouped).sort().forEach(folder => {
+        sortedFolders.forEach(folder => {
             const emoji = CATEGORIES[folder] || '📁';
-            const names = grouped[folder].sort().map(name => `\`${name}\``).join(' ');
+            const names = grouped[folder].sort();
 
-            fields.push({
-                name: `${emoji} ${categoryName(folder)}`,
-                value: names,
+            chunkNames(names, 1000).forEach((chunk, index) => {
+                fields.push({
+                    name: index === 0 ? `${emoji} ${categoryName(folder)}` : '\u200b',
+                    value: chunk.join(' '),
+                });
             });
         });
 
@@ -123,7 +173,7 @@ module.exports = {
             .setTitle('📕 Crimstone Commands')
             .setDescription('Use `/help command:<name>` for Details on a Command.')
             .addFields(fields)
-            .setFooter({ text: `${entries.length} Commands` });
+            .setFooter({ text: `${visible.length} Commands` });
 
         await interaction.reply({ embeds: [helpEmbed] });
     }
