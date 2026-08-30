@@ -3,6 +3,7 @@ const { readAfk, writeAfk } = require('../commands/utility/afkStore.js');
 const { readLevels, writeLevels } = require('../commands/utility/levelStore.js');
 const { getLevelFromXp } = require('../commands/utility/levelMath.js');
 const { getConfig } = require('../commands/utility/guildConfig.js');
+const { applyLevelRoles } = require('../commands/utility/applyLevelRoles.js');
 
 const xpCooldowns = new Map();
 
@@ -60,22 +61,33 @@ module.exports = {
 
                     writeLevels(levels);
 
-                    if (after.level > before.level && config.levelupMode !== 'off') {
-                        let target = message.channel;
+                    if (after.level > before.level) {
+                        const awarded = await applyLevelRoles(message.member, after.level).catch(() => []);
 
-                        if (config.levelupMode === 'channel') {
-                            target = message.guild.channels.cache.get(config.levelupChannel) || message.channel;
-                        }
+                        if (config.levelupMode !== 'off') {
+                            let target = message.channel;
 
-                        const canAnnounce = target
-                            .permissionsFor(message.guild.members.me)
-                            ?.has(PermissionFlagsBits.SendMessages);
+                            if (config.levelupMode === 'channel') {
+                                target = message.guild.channels.cache.get(config.levelupChannel) || message.channel;
+                            }
 
-                        if (canAnnounce) {
-                            try {
-                                await target.send(`🎉 **${message.author.username}** reached level **${after.level}**!`);
-                            } catch (error) {
-                                console.error('Failed to send level-up message:', error.message);
+                            const canAnnounce = target
+                                .permissionsFor(message.guild.members.me)
+                                ?.has(PermissionFlagsBits.SendMessages);
+
+                            if (canAnnounce) {
+                                let announcement = `🎉 **${message.author.username}** reached level **${after.level}**!`;
+
+                                if (awarded.length > 0) {
+                                    const mentions = awarded.map(roleId => `<@&${roleId}>`).join(', ');
+                                    announcement += `\nUnlocked: ${mentions}`;
+                                }
+
+                                try {
+                                    await target.send(announcement);
+                                } catch (error) {
+                                    console.error('Failed to send level-up message:', error.message);
+                                }
                             }
                         }
                     }
