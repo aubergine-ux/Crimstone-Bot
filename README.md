@@ -14,11 +14,12 @@ A Discord bot built with [Discord.js](https://discord.js.org/)! ~ invite it to y
 ---
 
 ## Features
-
-- **Moderation** - Complete server management with `ban`, `kick`, `timeout`, `purge` messages, and `echo` tools.
-- **Tools** - Minecraft tracking integrations, including checking server statuses (`mcstatus`) and retrieving user avatar textures (`mcskin`).
-- **Utility** - Essential client diagnostics including `ping`, `avatar` lookup, `server` info, `user` profiles, a quick reference `guide`, and automated command hot-reloads (`reload`).
-- **Fun** - Interactive server games and entertainment commands, including responsive search setups for `gif` animations and `ping`.
+- **Moderation** - Full server management with `ban`, `kick`, `timeout`, `purge`, `slowmode`, and `nickname`, plus a persistent warning system (`warn`, `warnings`, `unwarn`) and role tools (`role-give`, `role-remove`, `role-search`).
+- **Leveling** - Message-based XP with customizable rank cards (`rank`, `rankcard`), server leaderboards (`leaderboard`), automatic role rewards at set levels (`levelrole`), and admin adjustments (`givexp`, `setxp`).
+- **Tools** - Minecraft integrations (`mcstatus`, `mcskin`) and GitHub utilities (`github-stars`, `github-track`).
+- **Utility** - Everyday essentials: `avatar`, `user`, `server`, `roleinfo`, `weather`, `crypto`, `define`, `hex`, `poll`, `afk`, `announce`, `echo`, `uptime`, `info`, `guide`, `help`, and hot-reloading (`reload`).
+- **Fun** - Games and entertainment including `roll`, `coinflip`, `ship`, `gif`, `meow`, `catfact`, `mrrp`, and `ping`.
+- **Configuration** - Per-server setup via `config` - set level-up channels, mod log destinations, toggle XP, and exclude channels from earning.
 ---
 
 ## Self Hosting
