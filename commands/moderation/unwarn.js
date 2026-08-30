@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const { readWarnings, writeWarnings } = require('../utility/warnStore.js');
+const { logAction } = require('../utility/modLog.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -8,7 +9,7 @@ module.exports = {
         .addUserOption(option =>
             option.setName('target').setDescription('The User to remove a Warning from').setRequired(true))
         .addIntegerOption(option =>
-            option.setName('number').setDescription('The Warning number to remove (see /warnings)').setRequired(true))
+            option.setName('number').setDescription('The Warning number to remove (see /warnings)').setRequired(true).setMinValue(1))
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages),
 
     async execute(interaction) {
@@ -37,5 +38,14 @@ module.exports = {
         const reason = removed[0].reason;
 
         await interaction.reply({ content: `Removed Warning #${number} from **${user.tag}** (Reason: ${reason}). They now have ${userWarnings.length} warning(s).` });
+
+        await logAction({
+            guild: interaction.guild,
+            action: 'unwarn',
+            target: user,
+            moderator: interaction.user,
+            reason: `Removed Warning #${number}`,
+            extra: `Original reason: ${reason}\nRemaining warnings: ${userWarnings.length}`,
+        });
     },
 };

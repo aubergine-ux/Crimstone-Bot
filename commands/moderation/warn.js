@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const { readWarnings, writeWarnings } = require('../utility/warnStore.js');
+const { logAction } = require('../utility/modLog.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -32,11 +33,27 @@ module.exports = {
 
         const warnCount = warnings[guildId][user.id].length;
 
+        let delivered = true;
+
         try {
             await user.send(`You have been Warned in **${interaction.guild.name}** for: ${reason}`);
-            await interaction.reply({ content: `User **${user.tag}** has been Warned. They now have ${warnCount} Warning(s).` });
         } catch (error) {
+            delivered = false;
+        }
+
+        if (delivered) {
+            await interaction.reply({ content: `User **${user.tag}** has been Warned. They now have ${warnCount} Warning(s).` });
+        } else {
             await interaction.reply({ content: `Could not DM **${user.tag}** (DMs turned off), but the Warning has been logged. They now have ${warnCount} Warning(s).` });
         }
+
+        await logAction({
+            guild: interaction.guild,
+            action: 'warn',
+            target: user,
+            moderator: interaction.user,
+            reason: reason,
+            extra: `Warning #${warnCount} for this user.${delivered ? '' : ' (DM could not be delivered)'}`,
+        });
     },
 };
