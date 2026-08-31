@@ -1,6 +1,6 @@
 {
   "name": "Crimstone",
-  "version": "CB v26.62",
+  "version": "CB v26.63",
   "description": "A Discord Utility Bot!",
   "main": "index.js",
   "scripts": {
