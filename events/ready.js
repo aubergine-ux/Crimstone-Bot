@@ -19,12 +19,19 @@ module.exports = {
 		applyPresence();
 		setInterval(applyPresence, 10 * 60 * 1000);
 
+		let pingCount = 0;
+
 		setInterval(async () => {
 			const url = "http://192.168.1.157:3001/api/push/c55euiUf9v?status=up&msg=OK&ping=";
 			try {
 				const response = await fetch(url);
-				if (response.ok) {
-					console.log("Sucessfully Pinged Kuma!");
+				if (!response.ok) {
+					console.error("Kuma ping returned:", response.status);
+					return;
+				}
+				pingCount++;
+				if (pingCount % 30 === 0) {
+					console.log(`Kuma: ${pingCount} pings sent.`);
 				}
 			} catch (error) {
 				console.error("Failed to Ping Kuma:", error);
