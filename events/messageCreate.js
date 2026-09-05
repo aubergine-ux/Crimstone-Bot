@@ -100,7 +100,11 @@ module.exports = {
                 await message.react('6️⃣');
                 await message.react('7️⃣');
             } catch (error) {
-                console.error('Failed to 67 Properly:', error);
+                // 10008: message deleted before we reacted. 10003/50001/50013: channel
+                // gone or we lost access. None of these are worth a stack trace.
+                if (![10008, 10003, 50001, 50013].includes(error.code)) {
+                    console.error('Failed to 67 Properly:', error);
+                }
             }
         }
     }
