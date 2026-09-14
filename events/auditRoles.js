@@ -47,8 +47,8 @@ module.exports = [
             }
 
             if (before.permissions.bitfield !== after.permissions.bitfield) {
-                const gained = after.permissions.missing(before.permissions.toArray());
-                const lost = before.permissions.missing(after.permissions.toArray());
+                const gained = before.permissions.missing(after.permissions.toArray());
+                const lost = after.permissions.missing(before.permissions.toArray());
 
                 if (gained.length > 0) changes.push({ name: 'Permissions granted', value: trim(gained.join(', '), 1024) });
                 if (lost.length > 0) changes.push({ name: 'Permissions removed', value: trim(lost.join(', '), 1024) });
