@@ -1,10 +1,13 @@
 const { Events, ActivityType, PresenceUpdateStatus } = require('discord.js');
+const { startReminders } = require('../commands/utility/reminderScheduler.js');
 
 module.exports = {
 	name: Events.ClientReady,
 	once: true,
 	execute(client) {
 		console.log(`Ready! Logged in as ${client.user.tag}`);
+
+		startReminders(client);
 
 		const applyPresence = () => {
 			client.user.setPresence({

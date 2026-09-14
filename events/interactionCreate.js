@@ -28,6 +28,21 @@ module.exports = {
  
             return;
         }
+
+        if (interaction.isModalSubmit()) {
+            const command = interaction.client.commands.get(interaction.customId.split(':')[0]);
+
+            if (!command || !command.modalSubmit) return;
+
+            try {
+                await command.modalSubmit(interaction);
+            } catch (error) {
+                console.error(`Modal submit failed for ${interaction.customId}:`, error.message);
+            }
+
+            return;
+        }
+
         if (!interaction.isChatInputCommand()) return;
 
         const command = interaction.client.commands.get(interaction.commandName);

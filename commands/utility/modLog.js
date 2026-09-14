@@ -3,6 +3,9 @@ const { getConfig } = require('./guildConfig.js');
 const { createStore } = require('./jsonStore.js');
 
 const store = createStore('modCases.json');
+const historyStore = createStore('modHistory.json');
+
+const HISTORY_LIMIT = 500;
 
 const ACTIONS = {
     ban: { emoji: '🔨', label: 'Ban', color: 0xE74C3C },
@@ -31,19 +34,56 @@ const nextCase = (guildId) => {
     return updated;
 };
 
+const readHistory = () => historyStore.read();
+
+const recordCase = (guildId, caseNumber, options) => {
+    const history = readHistory();
+
+    if (!history[guildId]) history[guildId] = [];
+
+    history[guildId].push({
+        case: caseNumber,
+        action: options.action,
+        userId: options.target ? options.target.id : null,
+        userTag: options.target ? (options.target.tag || options.target.username) : null,
+        moderator: options.moderator ? (options.moderator.tag || options.moderator.username) : null,
+        reason: options.reason || null,
+        duration: options.duration || null,
+        timestamp: Date.now(),
+    });
+
+    if (history[guildId].length > HISTORY_LIMIT) {
+        history[guildId] = history[guildId].slice(-HISTORY_LIMIT);
+    }
+
+    historyStore.write(history);
+};
+
+const getUserCases = (guildId, userId) => {
+    const history = readHistory();
+    const guildHistory = history[guildId] || [];
+
+    return guildHistory.filter(entry => entry.userId === userId);
+};
+
 const logAction = async (options) => {
     const guild = options.guild;
     const action = options.action;
 
     if (!guild) return null;
 
+    const style = ACTIONS[action] || { emoji: '📋', label: action, color: 0x5865F2 };
+    const caseNumber = nextCase(guild.id);
+
+    recordCase(guild.id, caseNumber, options);
+
     const config = getConfig(guild.id);
 
-    if (!config.modlogChannel) return null;
+    if (!config.modlogChannel) return caseNumber;
 
     const channel = guild.channels.cache.get(config.modlogChannel);
 
-    if (!channel) return null;
+    if (!channel) return caseNumber;
 
     const me = guild.members.me;
     const canPost = channel.permissionsFor(me)?.has([
@@ -52,10 +92,7 @@ const logAction = async (options) => {
         PermissionFlagsBits.EmbedLinks,
     ]);
 
-    if (!canPost) return null;
-
-    const style = ACTIONS[action] || { emoji: '📋', label: action, color: 0x5865F2 };
-    const caseNumber = nextCase(guild.id);
+    if (!canPost) return caseNumber;
 
     const fields = [];
 
@@ -104,8 +141,8 @@ const logAction = async (options) => {
         return caseNumber;
     } catch (error) {
         console.error('Failed to write mod log:', error.message);
-        return null;
+        return caseNumber;
     }
 };
 
-module.exports = { logAction, ACTIONS };
+module.exports = { logAction, getUserCases, readHistory, ACTIONS };

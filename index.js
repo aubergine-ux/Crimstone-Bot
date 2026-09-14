@@ -7,7 +7,11 @@ const { flushAll } = require('./commands/utility/jsonStore.js');
 const client = new Client({ intents: [
 	GatewayIntentBits.Guilds,
 	GatewayIntentBits.GuildMessages,
-	GatewayIntentBits.MessageContent
+	GatewayIntentBits.MessageContent,
+	GatewayIntentBits.GuildMembers,
+	GatewayIntentBits.GuildModeration,
+	GatewayIntentBits.GuildVoiceStates,
+	GatewayIntentBits.GuildExpressions
 	] 
 });
 
@@ -34,11 +38,18 @@ const eventsPath = path.join(__dirname, 'events');
 const eventFiles = fs.readdirSync(eventsPath).filter((file) => file.endsWith('.js'));
 for (const file of eventFiles) {
 	const filePath = path.join(eventsPath, file);
-	const event = require(filePath);
-	if (event.once) {
-		client.once(event.name, (...args) => event.execute(...args));
-	} else {
-		client.on(event.name, (...args) => event.execute(...args));
+	const loaded = require(filePath);
+	const handlers = Array.isArray(loaded) ? loaded : [loaded];
+	for (const event of handlers) {
+		if (!event || !event.name || typeof event.execute !== 'function') {
+			console.log(`[WARNING] An event in ${filePath} is missing a "name" or "execute" property.`);
+			continue;
+		}
+		if (event.once) {
+			client.once(event.name, (...args) => event.execute(...args));
+		} else {
+			client.on(event.name, (...args) => event.execute(...args));
+		}
 	}
 }
 
