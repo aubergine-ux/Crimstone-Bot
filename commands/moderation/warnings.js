@@ -1,10 +1,11 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, InteractionContextType } = require('discord.js');
 const { readWarnings } = require('../utility/warnStore.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('warnings')
         .setDescription('View a User\'s Warnings')
+        .setContexts(InteractionContextType.Guild)
         .addUserOption(option =>
             option.setName('target').setDescription('The User to Check').setRequired(true))
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages),

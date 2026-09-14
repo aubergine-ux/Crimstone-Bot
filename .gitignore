@@ -7,3 +7,5 @@ levels.json
 rankPrefs.json
 levelRoles.json
 modCases.json
+*.json.tmp
+*.json.corrupt-*

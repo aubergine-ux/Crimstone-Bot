@@ -1,13 +1,15 @@
-const { SlashCommandBuilder, AttachmentBuilder } = require('discord.js');
-const { readLevels } = require('../utility/levelStore.js');
+const { SlashCommandBuilder, AttachmentBuilder, InteractionContextType } = require('discord.js');
+const { readLevels, readGlobalTotals } = require('../utility/levelStore.js');
 const { getLevelFromXp } = require('../utility/levelMath.js');
+const { getConfig, optedOutGuilds } = require('../utility/guildConfig.js');
 const { resolvePrefs } = require('../utility/rankPrefs.js');
-const { buildRankCard } = require('../utility/rankCard.js');
+const { buildRankCard } = require('../utility/rankCanvas.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('rank')
         .setDescription('Check your level and XP.')
+        .setContexts(InteractionContextType.Guild)
         .addUserOption(option =>
             option.setName('target').setDescription('Whose rank to check (defaults to you)').setRequired(false)
         ),
@@ -27,6 +29,16 @@ module.exports = {
         const position = sorted.findIndex(entry => entry[0] === user.id);
         const rank = position === -1 ? null : position + 1;
 
+        let globalRank = null;
+
+        if (getConfig(guildId).globalLeaderboard) {
+            const { totals } = readGlobalTotals(optedOutGuilds());
+            const globalSorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
+            const globalPosition = globalSorted.findIndex(entry => entry[0] === user.id);
+
+            if (globalPosition !== -1) globalRank = globalPosition + 1;
+        }
+
         const prefs = resolvePrefs(guildId, user.id);
 
         try {
@@ -39,6 +51,7 @@ module.exports = {
                 avatarUrl: user.displayAvatarURL({ extension: 'png', size: 256 }),
                 level: level,
                 rank: rank,
+                globalRank: globalRank,
                 currentXp: currentXp,
                 neededXp: neededXp,
             });
@@ -51,6 +64,7 @@ module.exports = {
             console.error('Failed to build rank card:', error);
             await interaction.editReply({
                 content: `**${user.username}** — Level ${level} (${currentXp}/${neededXp} XP, ${totalXp} total)`
+                    + (globalRank ? `\nGlobal rank: #${globalRank}` : '')
             });
         }
     }

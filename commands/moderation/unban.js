@@ -1,10 +1,11 @@
-const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags, InteractionContextType } = require('discord.js');
 const { logAction } = require('../utility/modLog.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('unban')
         .setDescription('Lift a ban from a User')
+        .setContexts(InteractionContextType.Guild)
         .addStringOption(option =>
             option.setName('target')
                 .setDescription('Start typing a name, or past a User ID')

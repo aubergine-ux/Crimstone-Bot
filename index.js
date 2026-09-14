@@ -2,6 +2,7 @@ require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
 const { Client, Collection, GatewayIntentBits } = require('discord.js');
+const { flushAll } = require('./commands/utility/jsonStore.js');
 
 const client = new Client({ intents: [
 	GatewayIntentBits.Guilds,
@@ -40,5 +41,16 @@ for (const file of eventFiles) {
 		client.on(event.name, (...args) => event.execute(...args));
 	}
 }
+
+const shutdown = (signal) => {
+	console.log(`[SHUTDOWN] ${signal} received, saving data before exit.`);
+	flushAll();
+	client.destroy();
+	process.exit(0);
+};
+
+process.on('SIGINT', () => shutdown('SIGINT'));
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('exit', flushAll);
 
 client.login(process.env.DISCORD_TOKEN);

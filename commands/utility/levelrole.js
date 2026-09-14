@@ -1,10 +1,11 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, InteractionContextType } = require('discord.js');
 const { getGuildRoles, setLevelRole, removeLevelRole, setStackMode } = require('../utility/levelRoles.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('levelrole')
         .setDescription('Manage roles given out at certain levels.')
+        .setContexts(InteractionContextType.Guild)
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageRoles)
         .addSubcommand(subcommand =>
             subcommand.setName('add')

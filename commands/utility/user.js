@@ -1,7 +1,7 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, InteractionContextType } = require('discord.js');
 
 module.exports = {
-	data: new SlashCommandBuilder().setName('user').setDescription('Provides information about the user.'),
+	data: new SlashCommandBuilder().setName('user').setDescription('Provides information about the user.').setContexts(InteractionContextType.Guild),
 	async execute(interaction) {
 		const { user, member } = interaction;
 		const createdAt = Math.floor(user.createdTimestamp / 1000);

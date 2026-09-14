@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, InteractionContextType } = require('discord.js');
 const { readWarnings, writeWarnings } = require('../utility/warnStore.js');
 const { logAction } = require('../utility/modLog.js');
 
@@ -6,6 +6,7 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('unwarn')
         .setDescription('Remove a specific Warning from a user')
+        .setContexts(InteractionContextType.Guild)
         .addUserOption(option =>
             option.setName('target').setDescription('The User to remove a Warning from').setRequired(true))
         .addIntegerOption(option =>

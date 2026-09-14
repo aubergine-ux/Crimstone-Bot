@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, InteractionContextType } = require('discord.js');
 const { resolvePrefs, savePrefs, clearPrefs } = require('../utility/rankPrefs.js');
 
 const HEX_PATTERN = /^[0-9A-Fa-f]{6}$/;
@@ -46,6 +46,7 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('rankcard')
         .setDescription('Customize your rank card.')
+        .setContexts(InteractionContextType.Guild)
         .addSubcommand(subcommand =>
             buildOptions(subcommand.setName('set').setDescription('Set your personal rank card style')))
         .addSubcommand(subcommand =>

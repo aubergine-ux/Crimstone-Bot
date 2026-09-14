@@ -5,7 +5,22 @@ const { getLevelFromXp } = require('../commands/utility/levelMath.js');
 const { getConfig } = require('../commands/utility/guildConfig.js');
 const { applyLevelRoles } = require('../commands/utility/applyLevelRoles.js');
 
+const XP_COOLDOWN = 10000;
+const PRUNE_EVERY = 300000;
+
 const xpCooldowns = new Map();
+
+let lastPrune = Date.now();
+
+const pruneCooldowns = (now) => {
+    if (now - lastPrune < PRUNE_EVERY) return;
+
+    lastPrune = now;
+
+    xpCooldowns.forEach((stamp, key) => {
+        if (now - stamp > XP_COOLDOWN) xpCooldowns.delete(key);
+    });
+};
 
 module.exports = {
     name: Events.MessageCreate,
@@ -43,7 +58,9 @@ module.exports = {
                 const cooldownKey = `${message.guild.id}-${message.author.id}`;
                 const lastXp = xpCooldowns.get(cooldownKey) || 0;
 
-                if (now - lastXp > 10000) {
+                pruneCooldowns(now);
+
+                if (now - lastXp > XP_COOLDOWN) {
                     xpCooldowns.set(cooldownKey, now);
 
                     const levels = readLevels();

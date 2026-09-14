@@ -1,10 +1,11 @@
-const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags, InteractionContextType } = require('discord.js');
 const { logAction } = require('../utility/modLog.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('purge')
         .setDescription('Delete multiple messages at once.')
+        .setContexts(InteractionContextType.Guild)
         .addIntegerOption((option) =>
             option
                 .setName('amount')
