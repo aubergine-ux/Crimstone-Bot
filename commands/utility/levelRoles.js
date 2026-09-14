@@ -1,19 +1,11 @@
-const fs = require('fs');
-const path = require('path');
+const { createStore } = require('./jsonStore.js');
 
-const filePath = path.join(__dirname, 'levelRoles.json');
+const store = createStore('levelRoles.json');
 
-const readLevelRoles = () => {
-    try {
-        const data = fs.readFileSync(filePath, 'utf8');
-        return JSON.parse(data);
-    } catch (error) {
-        return {};
-    }
-};
+const readLevelRoles = () => store.read();
 
 const writeLevelRoles = (levelRoles) => {
-    fs.writeFileSync(filePath, JSON.stringify(levelRoles, null, 2));
+    store.write(levelRoles);
 };
 
 const getGuildRoles = (guildId) => {

@@ -41,6 +41,13 @@ module.exports = {
                         .setDescription('Whether members earn XP')
                         .setRequired(true)))
         .addSubcommand(subcommand =>
+            subcommand.setName('global')
+                .setDescription('Choose whether this server joins the global leaderboard')
+                .addBooleanOption(option =>
+                    option.setName('enabled')
+                        .setDescription('Whether this server\'s XP counts towards /leaderboard scope:Global')
+                        .setRequired(true)))
+        .addSubcommand(subcommand =>
             subcommand.setName('ignore')
                 .setDescription('Stop or resume XP gain in a channel')
                 .addChannelOption(option =>
@@ -81,6 +88,7 @@ module.exports = {
                     { name: 'Level-up messages', value: levelupValue, inline: true },
                     { name: 'XP system', value: config.xpEnabled ? 'Enabled' : 'Disabled', inline: true },
                     { name: 'Mod log', value: config.modlogChannel ? `<#${config.modlogChannel}>` : 'Disabled', inline: true },
+                    { name: 'Global leaderboard', value: config.globalLeaderboard ? 'Joined' : 'Opted out', inline: true },
                     { name: 'XP-ignored channels', value: ignoredValue },
                 );
 
@@ -131,6 +139,19 @@ module.exports = {
             setConfig(guildId, { xpEnabled: enabled });
 
             await interaction.reply({ content: enabled ? '✅ Members will earn XP.' : '✅ XP gain is now turned off.' });
+            return;
+        }
+
+        if (subcommand === 'global') {
+            const enabled = interaction.options.getBoolean('enabled');
+
+            setConfig(guildId, { globalLeaderboard: enabled });
+
+            if (enabled) {
+                await interaction.reply({ content: '✅ This server now counts towards the global leaderboard.' });
+            } else {
+                await interaction.reply({ content: '✅ This server has opted out of the global leaderboard.' });
+            }
             return;
         }
 

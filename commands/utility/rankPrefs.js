@@ -1,7 +1,6 @@
-const fs = require('fs');
-const path = require('path');
+const { createStore } = require('./jsonStore.js');
 
-const filePath = path.join(__dirname, 'rankPrefs.json');
+const store = createStore('rankPrefs.json');
 
 const DEFAULTS = {
     accent: '#5865F2',
@@ -10,17 +9,10 @@ const DEFAULTS = {
     tagline: null,
 };
 
-const readPrefs = () => {
-    try {
-        const data = fs.readFileSync(filePath, 'utf8');
-        return JSON.parse(data);
-    } catch (error) {
-        return {};
-    }
-};
+const readPrefs = () => store.read();
 
 const writePrefs = (prefs) => {
-    fs.writeFileSync(filePath, JSON.stringify(prefs, null, 2));
+    store.write(prefs);
 };
 
 const resolvePrefs = (guildId, userId) => {

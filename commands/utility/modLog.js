@@ -1,9 +1,8 @@
-const fs = require('fs');
-const path = require('path');
 const { EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const { getConfig } = require('./guildConfig.js');
+const { createStore } = require('./jsonStore.js');
 
-const filePath = path.join(__dirname, 'modCases.json');
+const store = createStore('modCases.json');
 
 const ACTIONS = {
     ban: { emoji: '🔨', label: 'Ban', color: 0xE74C3C },
@@ -18,13 +17,7 @@ const ACTIONS = {
     role: { emoji: '🎭', label: 'Role Change', color: 0x5865F2 },
 };
 
-const readCases = () => {
-    try {
-        return JSON.parse(fs.readFileSync(filePath, 'utf8'));
-    } catch (error) {
-        return {};
-    }
-};
+const readCases = () => store.read();
 
 const nextCase = (guildId) => {
     const cases = readCases();
@@ -33,11 +26,7 @@ const nextCase = (guildId) => {
 
     cases[guildId] = updated;
 
-    try {
-        fs.writeFileSync(filePath, JSON.stringify(cases, null, 2));
-    } catch (error) {
-        console.error('Failed to save case number:', error.message);
-    }
+    store.write(cases);
 
     return updated;
 };
