@@ -1,7 +1,6 @@
-const fs = require('fs');
-const path = require('path');
+const { createStore } = require('./jsonStore.js');
 
-const filePath = path.join(__dirname, 'guildConfig.json');
+const store = createStore('guildConfig.json');
 
 const DEFAULTS = {
     levelupMode: 'current',
@@ -9,19 +8,13 @@ const DEFAULTS = {
     modlogChannel: null,
     xpEnabled: true,
     ignoredChannels: [],
+    globalLeaderboard: true,
 };
 
-const readConfig = () => {
-    try {
-        const data = fs.readFileSync(filePath, 'utf8');
-        return JSON.parse(data);
-    } catch (error) {
-        return {};
-    }
-};
+const readConfig = () => store.read();
 
 const writeConfig = (config) => {
-    fs.writeFileSync(filePath, JSON.stringify(config, null, 2));
+    store.write(config);
 };
 
 const getConfig = (guildId) => {
@@ -34,7 +27,14 @@ const getConfig = (guildId) => {
         modlogChannel: guildConfig.modlogChannel || DEFAULTS.modlogChannel,
         xpEnabled: guildConfig.xpEnabled !== undefined ? guildConfig.xpEnabled : DEFAULTS.xpEnabled,
         ignoredChannels: [...(guildConfig.ignoredChannels || DEFAULTS.ignoredChannels)],
+        globalLeaderboard: guildConfig.globalLeaderboard !== undefined ? guildConfig.globalLeaderboard : DEFAULTS.globalLeaderboard,
     };
+};
+
+const optedOutGuilds = () => {
+    const config = readConfig();
+
+    return Object.keys(config).filter(guildId => config[guildId].globalLeaderboard === false);
 };
 
 const setConfig = (guildId, updates) => {
@@ -58,4 +58,4 @@ const resetConfig = (guildId) => {
     }
 };
 
-module.exports = { readConfig, writeConfig, getConfig, setConfig, resetConfig, DEFAULTS };
+module.exports = { readConfig, writeConfig, getConfig, optedOutGuilds, setConfig, resetConfig, DEFAULTS };

@@ -1,19 +1,11 @@
-const fs = require('fs');
-const path = require('path');
+const { createStore } = require('./jsonStore.js');
 
-const filePath = path.join(__dirname, 'warnings.json');
+const store = createStore('warnings.json');
 
-const readWarnings = () => {
-    try {
-        const data = fs.readFileSync(filePath, 'utf8');
-        return JSON.parse(data);
-    } catch (error) {
-        return {};
-    }
-};
+const readWarnings = () => store.read();
 
 const writeWarnings = (warnings) => {
-    fs.writeFileSync(filePath, JSON.stringify(warnings, null, 2));
+    store.write(warnings);
 };
 
 module.exports = { readWarnings, writeWarnings };

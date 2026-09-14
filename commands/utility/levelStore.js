@@ -1,19 +1,55 @@
-const fs = require('fs');
-const path = require('path');
+const { createStore } = require('./jsonStore.js');
 
-const filePath = path.join(__dirname, 'levels.json');
+const store = createStore('levels.json', 10000);
 
-const readLevels = () => {
-    try {
-        const data = fs.readFileSync(filePath, 'utf8');
-        return JSON.parse(data);
-    } catch (error) {
-        return {};
-    }
-};
+const readLevels = () => store.read();
 
 const writeLevels = (levels) => {
-    fs.writeFileSync(filePath, JSON.stringify(levels, null, 2));
+    store.write(levels);
 };
 
-module.exports = { readLevels, writeLevels };
+const readGlobalTotals = (excludedGuilds = []) => {
+    const levels = readLevels();
+    const totals = {};
+
+    let guilds = 0;
+
+    Object.keys(levels).forEach(guildId => {
+        if (excludedGuilds.includes(guildId)) return;
+
+        const guildLevels = levels[guildId];
+
+        guilds++;
+
+        Object.keys(guildLevels).forEach(userId => {
+            totals[userId] = (totals[userId] || 0) + guildLevels[userId];
+        });
+    });
+
+    return { totals: totals, guilds: guilds };
+};
+
+const readGlobalBest = (excludedGuilds = []) => {
+    const levels = readLevels();
+    const best = {};
+
+    let guilds = 0;
+
+    Object.keys(levels).forEach(guildId => {
+        if (excludedGuilds.includes(guildId)) return;
+
+        const guildLevels = levels[guildId];
+
+        guilds++;
+
+        Object.keys(guildLevels).forEach(userId => {
+            const xp = guildLevels[userId];
+
+            if (!best[userId] || xp > best[userId]) best[userId] = xp;
+        });
+    });
+
+    return { totals: best, guilds: guilds };
+};
+
+module.exports = { readLevels, writeLevels, readGlobalTotals, readGlobalBest };
