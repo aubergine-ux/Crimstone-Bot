@@ -4,6 +4,7 @@ const { readLevels, writeLevels } = require('../commands/utility/levelStore.js')
 const { getLevelFromXp } = require('../commands/utility/levelMath.js');
 const { getConfig } = require('../commands/utility/guildConfig.js');
 const { applyLevelRoles } = require('../commands/utility/applyLevelRoles.js');
+const { recordMessage } = require('../commands/utility/activityStore.js');
 
 const XP_COOLDOWN = 10000;
 const PRUNE_EVERY = 300000;
@@ -51,6 +52,8 @@ module.exports = {
         }
 
         if (message.guild) {
+            recordMessage(message.guild.id, message.channel.id);
+
             const config = getConfig(message.guild.id);
 
             if (config.xpEnabled && !config.ignoredChannels.includes(message.channel.id)) {
