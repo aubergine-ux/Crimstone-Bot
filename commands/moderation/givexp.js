@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, InteractionContextType } = require('discord.js');
 const { readLevels, writeLevels } = require('../utility/levelStore.js');
 const { getLevelFromXp } = require('../utility/levelMath.js');
 
@@ -6,6 +6,7 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('givexp')
         .setDescription('Add (or remove) XP from a user.')
+        .setContexts(InteractionContextType.Guild)
         .addUserOption(option =>
             option.setName('target').setDescription('The user to modify').setRequired(true))
         .addIntegerOption(option =>

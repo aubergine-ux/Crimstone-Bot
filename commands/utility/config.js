@@ -1,10 +1,11 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ChannelType } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ChannelType, InteractionContextType } = require('discord.js');
 const { getConfig, setConfig, resetConfig } = require('../utility/guildConfig.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('config')
         .setDescription('Configure Crimstone for this server.')
+        .setContexts(InteractionContextType.Guild)
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
         .addSubcommand(subcommand =>
             subcommand.setName('view').setDescription('See the current settings'))

@@ -1,9 +1,10 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, InteractionContextType } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('role-search')
         .setDescription('List all Members in a specific Role.')
+        .setContexts(InteractionContextType.Guild)
         .addRoleOption(option =>
             option.setName('role')
                 .setDescription('Role you want to search for')

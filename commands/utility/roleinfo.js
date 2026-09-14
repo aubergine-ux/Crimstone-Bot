@@ -1,9 +1,10 @@
-const { SlashCommandBuilder, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, InteractionContextType } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('roleinfo')
         .setDescription('View information about a role.')
+        .setContexts(InteractionContextType.Guild)
         .addRoleOption(option =>
             option.setName('role')
                 .setDescription('The role to look up')

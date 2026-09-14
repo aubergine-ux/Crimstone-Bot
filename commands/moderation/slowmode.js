@@ -1,9 +1,10 @@
-const { SlashCommandBuilder, PermissionFlagBits } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagBits, InteractionContextType } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('slowmode')
         .setDescription('Set Slowmode Delay')
+        .setContexts(InteractionContextType.Guild)
         .addIntegerOption(option =>
             option.setName('seconds')
                 .setDescription('Slowmode Delay in Seconds (0 for off)')

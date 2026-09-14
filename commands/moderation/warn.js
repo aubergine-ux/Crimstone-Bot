@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, InteractionContextType } = require('discord.js');
 const { readWarnings, writeWarnings } = require('../utility/warnStore.js');
 const { logAction } = require('../utility/modLog.js');
 
@@ -6,6 +6,7 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('warn')
         .setDescription('Sends a Server User a Warning')
+        .setContexts(InteractionContextType.Guild)
         .addUserOption(option =>
             option.setName('target').setDescription('The User to be Warned.').setRequired(true))
         .addStringOption(option =>

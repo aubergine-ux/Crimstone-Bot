@@ -1,9 +1,10 @@
-const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, InteractionContextType } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('steal')
         .setDescription('Add an Emoji from another Server to this one.')
+        .setContexts(InteractionContextType.Guild)
         .addStringOption(option =>
             option.setName('emoji')
                 .setDescription('The custom Emoji to steal')

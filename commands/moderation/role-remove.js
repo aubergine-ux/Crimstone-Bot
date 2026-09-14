@@ -1,9 +1,10 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, InteractionContextType } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('role-remove')
         .setDescription('Remove a Role from a User')
+        .setContexts(InteractionContextType.Guild)
         .addUserOption(option =>
             option.setName('target')
                 .setDescription('User you want to remove Role from...')

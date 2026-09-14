@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags, InteractionContextType } = require('discord.js');
 const { logAction } = require('../utility/modLog.js');
 
 const formatDuration = (minutes) => {
@@ -21,6 +21,7 @@ module.exports = {
     data: new SlashCommandBuilder()
         .setName('timeout')
         .setDescription('Timeout a user.')
+        .setContexts(InteractionContextType.Guild)
         .addUserOption((option) =>
             option.setName('user').setDescription('The user to timeout').setRequired(true)
         )

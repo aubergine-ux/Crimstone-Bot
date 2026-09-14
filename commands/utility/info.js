@@ -21,6 +21,11 @@ module.exports = {
             await interaction.reply(`Username: ${user.username}\nID: ${user.id}`);
 
         } else if (interaction.options.getSubcommand() === 'server') {
+            if (!interaction.inGuild()) {
+                await interaction.reply('This only works inside a server.');
+                return;
+            }
+
             await interaction.reply(`Server: ${interaction.guild.name}\nMembers: ${interaction.guild.memberCount}`);
         }
     },

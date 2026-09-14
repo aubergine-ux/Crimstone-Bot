@@ -1,9 +1,10 @@
-const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, InteractionContextType } = require('discord.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('role-give')
         .setDescription('Give User a Role')
+        .setContexts(InteractionContextType.Guild)
         .addUserOption(option =>
             option.setName('target')
                 .setDescription('User you want to give a Role to...')

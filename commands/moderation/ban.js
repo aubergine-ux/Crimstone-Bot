@@ -1,10 +1,11 @@
-const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits, MessageFlags, InteractionContextType } = require('discord.js');
 const { logAction } = require('../utility/modLog.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('ban')
         .setDescription('Ban a User from the Server')
+        .setContexts(InteractionContextType.Guild)
         .addUserOption(option =>
             option.setName('target')
                 .setDescription('User you want to Ban')
