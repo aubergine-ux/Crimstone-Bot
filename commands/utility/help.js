@@ -24,6 +24,7 @@ const CATEGORY_OVERRIDES = {
     levelrole: 'leveling',
     givexp: 'leveling',
     setxp: 'leveling',
+    xpboost: 'leveling',
 };
 
 let folderCache = null;

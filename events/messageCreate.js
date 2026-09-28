@@ -29,7 +29,14 @@ module.exports = {
         if (message.author.bot) return;
 
         // A message automod removed shouldn't earn XP, clear AFK or get reactions.
-        if (message.guild && await runAutomod(message)) return;
+        if (message.guild) {
+            const removed = await runAutomod(message).catch(error => {
+                console.error('Automod failed on a message:', error.message);
+                return false;
+            });
+
+            if (removed) return;
+        }
 
         const afk = readAfk();
 

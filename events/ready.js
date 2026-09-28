@@ -1,6 +1,7 @@
 const { Events, ActivityType, PresenceUpdateStatus } = require('discord.js');
 const { startReminders } = require('../commands/utility/reminderScheduler.js');
 const { startVoiceXp } = require('../commands/utility/voiceXp.js');
+const { startTopggStats } = require('../commands/utility/topgg.js');
 
 module.exports = {
 	name: Events.ClientReady,
@@ -10,6 +11,7 @@ module.exports = {
 
 		startReminders(client);
 		startVoiceXp(client);
+		startTopggStats(client);
 
 		const applyPresence = () => {
 			client.user.setPresence({

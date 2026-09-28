@@ -43,6 +43,29 @@ module.exports = {
             return;
         }
 
+        // Buttons named "<command>:<data>" go to that command's button handler. Others,
+        // like the leaderboard's page buttons, are handled by their own collectors.
+        if (interaction.isButton()) {
+            const command = interaction.client.commands.get(interaction.customId.split(':')[0]);
+
+            if (!command || !command.button) return;
+
+            try {
+                await command.button(interaction);
+            } catch (error) {
+                console.error(`Button failed for ${interaction.customId}:`, error.message);
+
+                if (!interaction.replied && !interaction.deferred) {
+                    await interaction.reply({
+                        content: 'Something went wrong with that button.',
+                        flags: MessageFlags.Ephemeral,
+                    }).catch(() => null);
+                }
+            }
+
+            return;
+        }
+
         if (!interaction.isChatInputCommand()) return;
 
         const command = interaction.client.commands.get(interaction.commandName);
