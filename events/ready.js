@@ -1,5 +1,6 @@
 const { Events, ActivityType, PresenceUpdateStatus } = require('discord.js');
 const { startReminders } = require('../commands/utility/reminderScheduler.js');
+const { startVoiceXp } = require('../commands/utility/voiceXp.js');
 
 module.exports = {
 	name: Events.ClientReady,
@@ -8,6 +9,7 @@ module.exports = {
 		console.log(`Ready! Logged in as ${client.user.tag}`);
 
 		startReminders(client);
+		startVoiceXp(client);
 
 		const applyPresence = () => {
 			client.user.setPresence({

@@ -9,6 +9,10 @@ const DEFAULTS = {
     xpEnabled: true,
     ignoredChannels: [],
     globalLeaderboard: true,
+    levelupMessage: null,
+    voiceXp: false,
+    roleBoosts: {},
+    channelBoosts: {},
 };
 
 const readConfig = () => store.read();
@@ -28,6 +32,10 @@ const getConfig = (guildId) => {
         xpEnabled: guildConfig.xpEnabled !== undefined ? guildConfig.xpEnabled : DEFAULTS.xpEnabled,
         ignoredChannels: [...(guildConfig.ignoredChannels || DEFAULTS.ignoredChannels)],
         globalLeaderboard: guildConfig.globalLeaderboard !== undefined ? guildConfig.globalLeaderboard : DEFAULTS.globalLeaderboard,
+        levelupMessage: guildConfig.levelupMessage || DEFAULTS.levelupMessage,
+        voiceXp: guildConfig.voiceXp === true,
+        roleBoosts: { ...(guildConfig.roleBoosts || DEFAULTS.roleBoosts) },
+        channelBoosts: { ...(guildConfig.channelBoosts || DEFAULTS.channelBoosts) },
     };
 };
 

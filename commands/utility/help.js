@@ -16,6 +16,16 @@ const ORDER = ['moderation', 'leveling', 'music', 'tools', 'utility', 'fun', 'mi
 
 const HIDDEN = ['blankcommand'];
 
+// Commands that live in other folders but belong in their own category
+const CATEGORY_OVERRIDES = {
+    rank: 'leveling',
+    rankcard: 'leveling',
+    leaderboard: 'leveling',
+    levelrole: 'leveling',
+    givexp: 'leveling',
+    setxp: 'leveling',
+};
+
 let folderCache = null;
 
 function commandFolders() {
@@ -36,7 +46,7 @@ function commandFolders() {
                     const command = require(path.join(commandsPath, file));
 
                     if ('data' in command && 'execute' in command) {
-                        map[command.data.name] = entry.name;
+                        map[command.data.name] = CATEGORY_OVERRIDES[command.data.name] || entry.name;
                     }
                 } catch (error) {
                     console.error(`Help couldn't read ${file}:`, error.message);
@@ -49,6 +59,7 @@ function commandFolders() {
 }
 
 function categoryName(folder) {
+    if (folder === 'leveling') return 'Levelling';
     return folder.charAt(0).toUpperCase() + folder.slice(1);
 }
 

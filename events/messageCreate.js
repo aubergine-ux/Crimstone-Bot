@@ -1,9 +1,8 @@
-const { Events, PermissionFlagsBits } = require('discord.js');
+const { Events } = require('discord.js');
 const { readAfk, writeAfk } = require('../commands/utility/afkStore.js');
-const { readLevels, writeLevels } = require('../commands/utility/levelStore.js');
-const { getLevelFromXp } = require('../commands/utility/levelMath.js');
 const { getConfig } = require('../commands/utility/guildConfig.js');
-const { applyLevelRoles } = require('../commands/utility/applyLevelRoles.js');
+const { awardXp } = require('../commands/utility/awardXp.js');
+const { runAutomod } = require('../commands/utility/automodEngine.js');
 const { recordMessage } = require('../commands/utility/activityStore.js');
 
 const XP_COOLDOWN = 10000;
@@ -28,6 +27,9 @@ module.exports = {
 
     async execute(message) {
         if (message.author.bot) return;
+
+        // A message automod removed shouldn't earn XP, clear AFK or get reactions.
+        if (message.guild && await runAutomod(message)) return;
 
         const afk = readAfk();
 
@@ -56,7 +58,7 @@ module.exports = {
 
             const config = getConfig(message.guild.id);
 
-            if (config.xpEnabled && !config.ignoredChannels.includes(message.channel.id)) {
+            if (config.xpEnabled && message.member && !config.ignoredChannels.includes(message.channel.id)) {
                 const now = Date.now();
                 const cooldownKey = `${message.guild.id}-${message.author.id}`;
                 const lastXp = xpCooldowns.get(cooldownKey) || 0;
@@ -66,51 +68,8 @@ module.exports = {
                 if (now - lastXp > XP_COOLDOWN) {
                     xpCooldowns.set(cooldownKey, now);
 
-                    const levels = readLevels();
-                    const guildId = message.guild.id;
-
-                    if (!levels[guildId]) levels[guildId] = {};
-                    if (!levels[guildId][message.author.id]) levels[guildId][message.author.id] = 0;
-
-                    const before = getLevelFromXp(levels[guildId][message.author.id]);
-
-                    const gained = Math.floor(Math.random() * 21) + 40;
-                    levels[guildId][message.author.id] += gained;
-
-                    const after = getLevelFromXp(levels[guildId][message.author.id]);
-
-                    writeLevels(levels);
-
-                    if (after.level > before.level) {
-                        const awarded = await applyLevelRoles(message.member, after.level).catch(() => []);
-
-                        if (config.levelupMode !== 'off') {
-                            let target = message.channel;
-
-                            if (config.levelupMode === 'channel') {
-                                target = message.guild.channels.cache.get(config.levelupChannel) || message.channel;
-                            }
-
-                            const canAnnounce = target
-                                .permissionsFor(message.guild.members.me)
-                                ?.has(PermissionFlagsBits.SendMessages);
-
-                            if (canAnnounce) {
-                                let announcement = `🎉 **${message.author.username}** reached level **${after.level}**!`;
-
-                                if (awarded.length > 0) {
-                                    const mentions = awarded.map(roleId => `<@&${roleId}>`).join(', ');
-                                    announcement += `\nUnlocked: ${mentions}`;
-                                }
-
-                                try {
-                                    await target.send(announcement);
-                                } catch (error) {
-                                    console.error('Failed to send level-up message:', error.message);
-                                }
-                            }
-                        }
-                    }
+                    const base = Math.floor(Math.random() * 21) + 40;
+                    await awardXp(message.member, base, message.channel);
                 }
             }
         }
