@@ -66,6 +66,37 @@ const getUserCases = (guildId, userId) => {
     return guildHistory.filter(entry => entry.userId === userId);
 };
 
+const modlogChannel = (guild) => {
+    const config = getConfig(guild.id);
+
+    if (!config.modlogChannel) return null;
+
+    const channel = guild.channels.cache.get(config.modlogChannel);
+
+    if (!channel) return null;
+
+    const canPost = channel.permissionsFor(guild.members.me)?.has([
+        PermissionFlagsBits.ViewChannel,
+        PermissionFlagsBits.SendMessages,
+        PermissionFlagsBits.EmbedLinks,
+    ]);
+
+    return canPost ? channel : null;
+};
+
+// Posts to the mod log without opening a case, for notices that aren't punishments.
+const postModlog = async (guild, embed) => {
+    const channel = modlogChannel(guild);
+
+    if (!channel) return;
+
+    try {
+        await channel.send({ embeds: [embed] });
+    } catch (error) {
+        console.error('Failed to write mod log:', error.message);
+    }
+};
+
 const logAction = async (options) => {
     const guild = options.guild;
     const action = options.action;
@@ -77,22 +108,7 @@ const logAction = async (options) => {
 
     recordCase(guild.id, caseNumber, options);
 
-    const config = getConfig(guild.id);
-
-    if (!config.modlogChannel) return caseNumber;
-
-    const channel = guild.channels.cache.get(config.modlogChannel);
-
-    if (!channel) return caseNumber;
-
-    const me = guild.members.me;
-    const canPost = channel.permissionsFor(me)?.has([
-        PermissionFlagsBits.ViewChannel,
-        PermissionFlagsBits.SendMessages,
-        PermissionFlagsBits.EmbedLinks,
-    ]);
-
-    if (!canPost) return caseNumber;
+    if (!modlogChannel(guild)) return caseNumber;
 
     const fields = [];
 
@@ -136,13 +152,9 @@ const logAction = async (options) => {
         .setFooter({ text: options.target ? `User ID: ${options.target.id}` : `Guild: ${guild.name}` })
         .setTimestamp();
 
-    try {
-        await channel.send({ embeds: [embed] });
-        return caseNumber;
-    } catch (error) {
-        console.error('Failed to write mod log:', error.message);
-        return caseNumber;
-    }
+    await postModlog(guild, embed);
+
+    return caseNumber;
 };
 
-module.exports = { logAction, getUserCases, readHistory, ACTIONS };
+module.exports = { logAction, postModlog, getUserCases, readHistory, ACTIONS };

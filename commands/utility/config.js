@@ -1,5 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, ChannelType, InteractionContextType } = require('discord.js');
 const { getConfig, setConfig, resetConfig } = require('../utility/guildConfig.js');
+const { DEFAULT_LEVELUP } = require('../utility/awardXp.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -41,6 +42,21 @@ module.exports = {
                     option.setName('enabled')
                         .setDescription('Whether members earn XP')
                         .setRequired(true)))
+        .addSubcommand(subcommand =>
+            subcommand.setName('voicexp')
+                .setDescription('Let members earn XP while talking in voice channels')
+                .addBooleanOption(option =>
+                    option.setName('enabled')
+                        .setDescription('Whether time in voice earns XP')
+                        .setRequired(true)))
+        .addSubcommand(subcommand =>
+            subcommand.setName('levelmessage')
+                .setDescription('Write your own level-up message')
+                .addStringOption(option =>
+                    option.setName('template')
+                        .setDescription('Use {user}, {username}, {level}, {server}. Leave empty for the default.')
+                        .setMaxLength(500)
+                        .setRequired(false)))
         .addSubcommand(subcommand =>
             subcommand.setName('global')
                 .setDescription('Choose whether this server joins the global leaderboard')
@@ -88,9 +104,11 @@ module.exports = {
                 .addFields(
                     { name: 'Level-up messages', value: levelupValue, inline: true },
                     { name: 'XP system', value: config.xpEnabled ? 'Enabled' : 'Disabled', inline: true },
+                    { name: 'Voice XP', value: config.voiceXp ? 'Enabled' : 'Disabled', inline: true },
                     { name: 'Mod log', value: config.modlogChannel ? `<#${config.modlogChannel}>` : 'Disabled', inline: true },
                     { name: 'Global leaderboard', value: config.globalLeaderboard ? 'Joined' : 'Opted out', inline: true },
                     { name: 'XP-ignored channels', value: ignoredValue },
+                    { name: 'Level-up message', value: `\`${config.levelupMessage || DEFAULT_LEVELUP}\``.slice(0, 1024) },
                 );
 
             await interaction.reply({ embeds: [embed] });
@@ -140,6 +158,33 @@ module.exports = {
             setConfig(guildId, { xpEnabled: enabled });
 
             await interaction.reply({ content: enabled ? '✅ Members will earn XP.' : '✅ XP gain is now turned off.' });
+            return;
+        }
+
+        if (subcommand === 'voicexp') {
+            const enabled = interaction.options.getBoolean('enabled');
+
+            setConfig(guildId, { voiceXp: enabled });
+
+            if (enabled) {
+                await interaction.reply({ content: '✅ Members will earn XP every minute they talk in voice with someone else. Muted, deafened and AFK-channel members don\'t earn any.' });
+            } else {
+                await interaction.reply({ content: '✅ Voice channels no longer earn XP.' });
+            }
+            return;
+        }
+
+        if (subcommand === 'levelmessage') {
+            const template = interaction.options.getString('template');
+
+            setConfig(guildId, { levelupMessage: template || null });
+
+            const preview = template || DEFAULT_LEVELUP;
+
+            await interaction.reply({
+                content: `✅ Level-up message set to:\n> ${preview}\n-# {user} pings the member, {username} doesn't. Unlocked reward roles are listed underneath.`,
+                allowedMentions: { parse: [] },
+            });
             return;
         }
 
