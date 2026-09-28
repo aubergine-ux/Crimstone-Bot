@@ -7,7 +7,7 @@ module.exports = [
 
         async execute(before, after) {
             if (!after.guild || after.author?.bot) return;
-            if (before.content === after.content) return;
+            if (before.partial || before.content === after.content) return;
 
             const embed = auditEmbed('messages', 'Message edited', 'update')
                 .setDescription(`By <@${after.author.id}> in <#${after.channel.id}> · [jump](${after.url})`)

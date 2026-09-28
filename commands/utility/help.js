@@ -16,7 +16,6 @@ const ORDER = ['moderation', 'leveling', 'music', 'tools', 'utility', 'fun', 'mi
 
 const HIDDEN = ['blankcommand'];
 
-// Commands that live in other folders but belong in their own category
 const CATEGORY_OVERRIDES = {
     rank: 'leveling',
     rankcard: 'leveling',

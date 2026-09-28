@@ -1,4 +1,3 @@
-// Fills {placeholders} in admin-written messages. Unknown placeholders are left as typed.
 const fillTemplate = (template, values) => {
     return template.replace(/\{(\w+)\}/g, (match, key) => {
         return values[key] !== undefined ? String(values[key]) : match;

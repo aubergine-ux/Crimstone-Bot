@@ -9,5 +9,9 @@ levelRoles.json
 modCases.json
 automodConfig.json
 welcomeConfig.json
+giveaways.json
+starboard.json
+tickets.json
+alerts.json
 *.json.tmp
 *.json.corrupt-*

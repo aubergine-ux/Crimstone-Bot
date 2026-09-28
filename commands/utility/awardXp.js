@@ -7,7 +7,6 @@ const { fillTemplate, memberValues } = require('./template.js');
 
 const DEFAULT_LEVELUP = '🎉 **{username}** reached level **{level}**!';
 
-// The best role boost the member has, times the boost on the channel (or its parent, for threads).
 const boostFor = (member, channel, config) => {
     let roleBoost = 1;
 

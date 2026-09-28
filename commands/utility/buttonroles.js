@@ -2,7 +2,6 @@ const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, Butt
 
 const ROLE_OPTIONS = ['role1', 'role2', 'role3', 'role4', 'role5'];
 
-// A role the bot may hand out: not @everyone, not managed, and below the bot's highest role.
 const canAssign = (guild, role) => {
     const me = guild.members.me;
     return role.id !== guild.id && !role.managed && role.position < me.roles.highest.position;

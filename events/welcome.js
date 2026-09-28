@@ -8,10 +8,8 @@ module.exports = [
 
         async execute(member) {
             try {
-                // Automod runs first so a kicked account doesn't get a welcome.
                 if (await checkJoin(member)) return;
 
-                // Members still on the rules screen get their roles once they accept.
                 if (!member.pending) await giveAutoRoles(member);
 
                 await sendGreeting(member, 'join');
