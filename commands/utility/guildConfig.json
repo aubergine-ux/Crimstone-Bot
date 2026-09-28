@@ -1,7 +1,11 @@
 {
   "1467895214516469999": {
     "modlogChannel": "1542946082869219529",
-    "xpEnabled": true
+    "xpEnabled": true,
+    "voiceXp": true,
+    "roleBoosts": {
+      "1467899869594386664": 1.5
+    }
   },
   "1549546817685823501": {
     "globalLeaderboard": true

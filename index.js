@@ -1,7 +1,7 @@
 require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
-const { Client, Collection, GatewayIntentBits } = require('discord.js');
+const { Client, Collection, GatewayIntentBits, Partials } = require('discord.js');
 const { flushAll } = require('./commands/utility/jsonStore.js');
 
 const client = new Client({ intents: [
@@ -11,8 +11,10 @@ const client = new Client({ intents: [
 	GatewayIntentBits.GuildMembers,
 	GatewayIntentBits.GuildModeration,
 	GatewayIntentBits.GuildVoiceStates,
-	GatewayIntentBits.GuildExpressions
-	] 
+	GatewayIntentBits.GuildExpressions,
+	GatewayIntentBits.GuildMessageReactions,
+	],
+	partials: [Partials.Message, Partials.Reaction, Partials.User],
 });
 
 client.commands = new Collection();

@@ -5,7 +5,6 @@ const VOICE_INTERVAL = 60000;
 
 let running = false;
 
-// Muted or deafened members aren't really taking part, so they neither earn XP nor count as company.
 const isActive = (member) => {
     const voice = member.voice;
 

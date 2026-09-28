@@ -1,11 +1,9 @@
-// top.gg integration. Everything here is skipped unless TOPGG_TOKEN is set in .env
-// (find it under your bot's page on top.gg → Edit → Webhooks → Token).
+// TOPGG_TOKEN comes from your bot's page on top.gg → Edit → Webhooks → Token.
 const API = 'https://top.gg/api';
 const STATS_INTERVAL = 30 * 60 * 1000;
 
 const token = () => process.env.TOPGG_TOKEN;
 
-// true or false when top.gg answered, null when there's no token or the request failed.
 const hasVoted = async (botId, userId) => {
     if (!token()) return null;
 

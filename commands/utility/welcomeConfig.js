@@ -47,7 +47,6 @@ const resetWelcomeConfig = (guildId) => {
     }
 };
 
-// type is 'join' or 'leave'. Returns false when there's nowhere to post.
 const sendGreeting = async (member, type) => {
     const config = getWelcomeConfig(member.guild.id);
     const channelId = type === 'join' ? config.joinChannel : config.leaveChannel;

@@ -20,7 +20,6 @@ let lastPrune = Date.now();
 
 const escapeRegex = (text) => text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
-// One compiled pattern per guild, rebuilt only when its word list changes.
 const wordPattern = (guildId, words) => {
     const key = words.join('\u0000');
     const cached = wordPatterns.get(guildId);
@@ -186,7 +185,6 @@ const checkSpam = async (message, spam) => {
     return true;
 };
 
-// Returns true when the message was removed, so the caller can stop handling it.
 const runAutomod = async (message) => {
     const config = getAutomodConfig(message.guild.id);
 
@@ -205,7 +203,6 @@ const runAutomod = async (message) => {
     return false;
 };
 
-// Edits skip the spam check, otherwise fixing a typo could count as spamming.
 const runAutomodOnEdit = async (message) => {
     const config = getAutomodConfig(message.guild.id);
 
@@ -278,7 +275,6 @@ const kickNewAccount = async (member, minDays) => {
     return true;
 };
 
-// Returns true when the member was kicked, so welcome messages can be skipped.
 const checkJoin = async (member) => {
     const config = getAutomodConfig(member.guild.id);
 
