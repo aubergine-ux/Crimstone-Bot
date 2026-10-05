@@ -35,7 +35,7 @@ module.exports = {
 		setInterval(async () => {
 			const url = "http://192.168.1.157:3001/api/push/c55euiUf9v?status=up&msg=OK&ping=";
 			try {
-				const response = await fetch(url);
+				const response = await fetch(url, { signal: AbortSignal.timeout(10000) });
 				if (!response.ok) {
 					console.error("Kuma ping returned:", response.status);
 					return;
@@ -45,7 +45,11 @@ module.exports = {
 					console.log(`Kuma: ${pingCount} pings sent.`);
 				}
 			} catch (error) {
-				console.error("Failed to Ping Kuma:", error);
+				if (error.name === 'TimeoutError' || error.cause?.code === 'UND_ERR_HEADERS_TIMEOUT') {
+					console.error("Kuma ping timed out");
+				} else {
+					console.error("Failed to Ping Kuma:", error);
+				}
 			}
 		}, 60000);
 	},
