@@ -5,7 +5,7 @@
 ![Made with Love](https://img.shields.io/badge/Made%20with-Love-ff69b4?style=for-the-badge)
 ![GitHub last commit](https://img.shields.io/github/last-commit/aubergine-ux/Crimstone-Bot?style=for-the-badge)
 
-A Discord bot built with [Discord.js](https://discord.js.org/)! ~ invite it to your server and get started instantly.
+A Discord bot built with [Discord.js](https://discord.js.org/)! ~ invite it to your server and get started instantly. **80 slash commands** covering moderation, levelling, automod, community tools and fun — run `/help` to browse them all.
 
 🌐 **Website:** [crim.aubergineux.com](https://crim.aubergineux.com/)
 
@@ -19,15 +19,15 @@ A Discord bot built with [Discord.js](https://discord.js.org/)! ~ invite it to y
 
 ## Features
 
-- **Moderation** - Complete server management with `ban`, `kick`, `timeout`, `untimeout`, `purge` messages, and `echo` tools, plus a per-member history lookup with `modstats`, case lookups and reason edits with `case`, and automatic punishments when members reach a number of warnings (`warnrules`).
-- **Levelling** - Members earn XP as they chat or talk in voice, with rank cards (`rank`), role rewards (`levelrole`), XP boosts (`xpboost`), custom level-up messages, and daily streaks, and server, weekly, monthly or global leaderboards (`leaderboard`).
+- **Moderation** - Complete server management with `ban`, `kick`, `timeout`, `untimeout`, `purge`, `slowmode` and role tools, a case system with per-member history (`modstats`) and case lookups (`case`), and automatic punishments when members reach a number of warnings (`warnrules`).
+- **Levelling** - Members earn XP as they chat or talk in voice, with customisable rank cards (`rank`, `rankcard`), role rewards (`levelrole`), XP boosts (`xpboost`), daily streaks, custom level-up messages, image leaderboards for the server, the week, the month or globally (`leaderboard`), and MEE6 or file import and export (`importxp`, `exportxp`).
 - **Automod** - Spam timeouts, invite, link and word filters, raid alerts and a minimum account age, set up with `automod`.
 - **Welcome** - Join and leave messages and auto roles (`welcome`), plus self-assign role buttons (`buttonroles`).
 - **Community** - Button-entry giveaways with level requirements (`giveaway`), a starboard (`starboard`), private support tickets with transcripts (`ticket`), and YouTube and Twitch alerts (`alerts`).
 - **Audit log** - Seven independently controlled categories of server activity, set up with `auditlog`.
-- **Tools** - Minecraft tracking integrations, including checking server statuses (`mcstatus`) and retrieving user avatar textures (`mcskin`).
-- **Utility** - Essential client diagnostics including `ping`, `avatar` lookup, `server` info, `user` profiles, activity stats (`serverstats`), reminders (`reminder`), deleted message recall (`snipe`), an embed builder (`embed`), a quick reference `guide`, and automated command hot-reloads (`reload`).
-- **Fun** - Interactive server games and entertainment commands, including responsive search setups for `gif` animations and `ping`.
+- **Tools** - Minecraft server status (`mcstatus`) and player skins (`mcskin`), GitHub repo stars and live tracking (`github-stars`, `github-track`), translation (`translate`), and emoji stealing from other servers (`steal`).
+- **Utility** - `avatar`, `info` and `roleinfo` lookups, activity stats (`serverstats`), reminders (`reminder`), AFK status (`afk`), deleted message recall (`snipe`), polls (`poll`), announcements (`announce`), an embed builder (`embed`), weather, definitions and crypto prices (`weather`, `define`, `crypto`), and per-server settings (`config`).
+- **Fun** - `8ball`, `coinflip`, `roll`, `ship`, `deepfry`, `gif`, `catfact`, and of course `meow` and `mrrp`.
 
 ---
 
@@ -65,9 +65,22 @@ Server boards only list people who are still in the server. Servers are included
 
 ---
 
-## Warnings
+## Moderation
 
-Every warning is a case in the moderation history, so `/modstats` shows them alongside bans, kicks and timeouts. `/unwarn` deactivates a warning without deleting its case.
+Every action is logged as a numbered case. Set a mod log channel with `/config modlog` to have each case posted there as it happens.
+
+| Command | What it does |
+| --- | --- |
+| `/ban`, `/unban`, `/kick` | Remove members from the server, or let them back in |
+| `/timeout`, `/untimeout` | Mute a member for up to 28 days, or lift it early |
+| `/purge`, `/slowmode` | Bulk delete messages, or slow a channel down |
+| `/nickname`, `/role-give`, `/role-remove`, `/role-search` | Manage members' nicknames and roles |
+| `/modstats` | A member's full history — every case, a breakdown by action, and their active warnings |
+| `/case view`, `/case reason` | Look up any case by number, or correct its reason |
+
+### Warnings
+
+Every warning is a case too, so `/modstats` shows them alongside bans, kicks and timeouts. `/unwarn` deactivates a warning without deleting its case.
 
 | Command | What it does |
 | --- | --- |
@@ -75,7 +88,6 @@ Every warning is a case in the moderation history, so `/modstats` shows them alo
 | `/warnrules add` | Automatically time out, kick or ban a member when they reach a number of warnings, like 3 → 1 hour timeout, 5 → kick |
 | `/warnrules expiry` | Let warnings stop counting after a number of days. Expired warnings stay in the history |
 | `/warnrules list`, `/warnrules remove` | See or remove rules |
-| `/case view`, `/case reason` | Look up any case by number, or correct its reason |
 
 A rule fires once, when a member reaches exactly that many active warnings, and is logged as its own case.
 
@@ -157,9 +169,19 @@ Older versions kept data in JSON files in `commands/utility/`. On first start th
 
 ### Steps
 1. Clone the repo and run `npm install`
-2. Create `config.json` and `.env` with your bot token and client ID
+2. Create a `.env` file with `DISCORD_TOKEN` (your bot token) and `CLIENT_ID` (your application ID)
 3. Optionally add `TWITCH_CLIENT_ID` and `TWITCH_CLIENT_SECRET` for Twitch alerts, and `TOPGG_TOKEN` to `.env` (from your bot's top.gg page → Edit → Webhooks). With it, `/vote` shows whether a member has voted and the server count is posted to top.gg every 30 minutes.
 4. Run `npm run deploy` to register commands
 5. Start the bot with `npm start`, or keep it running and restart it after crashes with [pm2](https://pm2.keymetrics.io/): `pm2 start ecosystem.config.js`
+
+`config.json` (see `config.example.json`) is only needed for `deploy-private.js`, which registers developer-only commands like `/reload` in a single test server.
+
+### Updating
+
+1. Pull the latest code and run `npm install`
+2. Restart the bot. Older JSON data is imported into the database automatically on the first start
+3. Run `npm run deploy` so Discord picks up new and changed commands
+
+Crimstone logs errors instead of crashing on a failed event, and saves its data before exiting on anything it can't recover from, so pm2 can bring it straight back up.
 
 ---

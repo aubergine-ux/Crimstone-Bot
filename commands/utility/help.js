@@ -14,7 +14,7 @@ const CATEGORIES = {
 
 const ORDER = ['moderation', 'leveling', 'music', 'tools', 'utility', 'fun', 'misc'];
 
-const HIDDEN = ['blankcommand'];
+const HIDDEN = ['command_name'];
 
 const CATEGORY_OVERRIDES = {
     rank: 'leveling',
@@ -24,6 +24,11 @@ const CATEGORY_OVERRIDES = {
     givexp: 'leveling',
     setxp: 'leveling',
     xpboost: 'leveling',
+    resetxp: 'leveling',
+    importxp: 'leveling',
+    exportxp: 'leveling',
+    levelsync: 'leveling',
+    noxp: 'leveling',
 };
 
 let folderCache = null;
