@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, PermissionFlagsBits, InteractionContextType } = require('discord.js');
-const { readWarnings, writeWarnings } = require('../utility/warnStore.js');
+const { getWarnings, removeWarning } = require('../utility/warnStore.js');
 const { logAction } = require('../utility/modLog.js');
 
 module.exports = {
@@ -19,8 +19,7 @@ module.exports = {
         const number = interaction.options.getInteger('number');
         const guildId = interaction.guild.id;
 
-        const warnings = readWarnings();
-        const userWarnings = warnings[guildId]?.[user.id] || [];
+        const userWarnings = getWarnings(guildId, user.id);
 
         if (userWarnings.length === 0) {
             await interaction.reply({ content: `**${user.tag}** has no Warnings to remove.` });
@@ -34,7 +33,7 @@ module.exports = {
 
         const removed = userWarnings.splice(number - 1, 1);
 
-        writeWarnings(warnings);
+        removeWarning(guildId, removed[0].case);
 
         const reason = removed[0].reason;
 

@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, InteractionContextType } = require('discord.js');
-const { readLevels, writeLevels } = require('../utility/levelStore.js');
+const { setXp } = require('../utility/levelStore.js');
 const { getLevelFromXp } = require('../utility/levelMath.js');
 const { syncLevelRoles } = require('../utility/applyLevelRoles.js');
 
@@ -24,12 +24,7 @@ module.exports = {
             return;
         }
 
-        const levels = readLevels();
-
-        if (!levels[guildId]) levels[guildId] = {};
-        levels[guildId][user.id] = amount;
-
-        writeLevels(levels);
+        setXp(guildId, user.id, amount);
 
         const { level } = getLevelFromXp(amount);
 

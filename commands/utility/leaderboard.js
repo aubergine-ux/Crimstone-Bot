@@ -1,78 +1,127 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, MessageFlags, InteractionContextType } = require('discord.js');
-const { readLevels, readGlobalTotals, readGlobalBest } = require('../utility/levelStore.js');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, AttachmentBuilder, MessageFlags, InteractionContextType } = require('discord.js');
+const { getXp, guildRanking, globalRanking } = require('../utility/levelStore.js');
 const { getConfig, optedOutGuilds } = require('../utility/guildConfig.js');
 const { getLevelFromXp } = require('../utility/levelMath.js');
+const { buildLeaderboardCard } = require('../utility/rankCanvas.js');
 
 const PAGE_SIZE = 10;
 const MAX_ENTRIES = 250;
 const PAGING_TIME = 120000;
 
-const resolveName = async (interaction, scope, userId) => {
-    if (scope === 'server') {
-        const member = await interaction.guild.members.fetch(userId).catch(() => null);
-        return member ? member.user.username : 'Unknown User';
-    }
+const SERVER_SCOPES = ['server', 'week', 'month'];
 
-    const user = await interaction.client.users.fetch(userId).catch(() => null);
-    return user ? user.username : 'Unknown User';
+const loadMembers = async (guild) => {
+    if (guild.members.cache.size >= guild.memberCount) return;
+
+    await guild.members.fetch().catch(error => {
+        console.error('Failed to fetch members for the leaderboard:', error.message);
+    });
 };
 
-const collectEntries = (interaction, scope) => {
-    if (scope === 'server') {
-        const levels = readLevels();
-        return { entries: levels[interaction.guild.id] || {}, guilds: 1 };
+const resolveUser = async (interaction, scope, userId) => {
+    let user;
+
+    if (SERVER_SCOPES.includes(scope)) {
+        const member = interaction.guild.members.cache.get(userId);
+        user = member ? member.user : null;
+    } else {
+        user = await interaction.client.users.fetch(userId).catch(() => null);
     }
 
-    const excluded = optedOutGuilds();
-    const { totals, guilds } = scope === 'best' ? readGlobalBest(excluded) : readGlobalTotals(excluded);
+    if (!user) return { username: 'Unknown User', avatarUrl: null };
 
-    return { entries: totals, guilds: guilds };
+    return { username: user.username, avatarUrl: user.displayAvatarURL({ extension: 'png', size: 64 }) };
+};
+
+const collectEntries = async (interaction, scope) => {
+    if (SERVER_SCOPES.includes(scope)) {
+        const period = scope === 'server' ? 'all' : scope;
+        const ranked = guildRanking(interaction.guild.id, period);
+
+        await loadMembers(interaction.guild);
+
+        // People who left keep their XP, but they don't belong on this server's board.
+        const present = ranked.filter(entry => interaction.guild.members.cache.has(entry[0]));
+
+        return { entries: present.slice(0, MAX_ENTRIES), guilds: 1 };
+    }
+
+    const mode = scope === 'best' ? 'best' : 'combined';
+    const { entries, guilds } = globalRanking(mode, optedOutGuilds(), MAX_ENTRIES);
+
+    return { entries: entries, guilds: guilds };
 };
 
 const describeScope = (interaction, scope, guilds) => {
-    if (scope === 'server') {
-        return { title: `🏆 ${interaction.guild.name} Leaderboard`, color: 0xF1C40F, note: null };
+    const servers = `${guilds} server${guilds === 1 ? '' : 's'}`;
+
+    if (scope === 'week') {
+        return { emoji: '📅', heading: `${interaction.guild.name} — This Week`, color: 0x3498DB, note: 'Resets every Monday (UTC)' };
+    }
+
+    if (scope === 'month') {
+        return { emoji: '🗓️', heading: `${interaction.guild.name} — This Month`, color: 0x9B59B6, note: 'Resets on the 1st (UTC)' };
     }
 
     if (scope === 'best') {
-        return {
-            title: '🌍 Global Leaderboard — Best Server',
-            color: 0xE67E22,
-            note: `Each member's strongest server, across ${guilds} server${guilds === 1 ? '' : 's'}`,
-        };
+        return { emoji: '🌍', heading: 'Global Leaderboard — Best Server', color: 0xE67E22, note: `Each member's strongest server, across ${servers}` };
     }
 
-    return {
-        title: '🌍 Global Leaderboard — Combined XP',
-        color: 0xE67E22,
-        note: `XP combined across ${guilds} server${guilds === 1 ? '' : 's'}`,
-    };
+    if (scope === 'global') {
+        return { emoji: '🌍', heading: 'Global Leaderboard — Combined XP', color: 0xE67E22, note: `XP combined across ${servers}` };
+    }
+
+    return { emoji: '🏆', heading: `${interaction.guild.name} Leaderboard`, color: 0xF1C40F, note: null };
 };
 
 const buildPage = async (interaction, scope, sorted, page, guilds) => {
     const start = page * PAGE_SIZE;
     const slice = sorted.slice(start, start + PAGE_SIZE);
     const pages = Math.ceil(sorted.length / PAGE_SIZE);
-    const lines = [];
+    const rows = [];
 
     for (let index = 0; index < slice.length; index++) {
         const userId = slice[index][0];
-        const totalXp = slice[index][1];
-        const { level } = getLevelFromXp(totalXp);
+        const xp = slice[index][1];
+        const { username, avatarUrl } = await resolveUser(interaction, scope, userId);
 
-        const name = await resolveName(interaction, scope, userId);
+        // Weekly and monthly XP isn't a total, so the level shown is always the member's real one.
+        const totalXp = scope === 'week' || scope === 'month' ? getXp(interaction.guild.id, userId) : xp;
 
-        lines.push(`**${start + index + 1}.** ${name} — Level ${level} (${totalXp} XP)`);
+        rows.push({
+            position: start + index + 1,
+            username: username,
+            avatarUrl: avatarUrl,
+            xp: xp,
+            level: getLevelFromXp(totalXp).level,
+        });
     }
 
-    const { title, color, note } = describeScope(interaction, scope, guilds);
+    const { emoji, heading, color, note } = describeScope(interaction, scope, guilds);
     const footer = [`Page ${page + 1} of ${pages}`, note].filter(part => part).join(' · ');
 
-    return new EmbedBuilder()
+    try {
+        const buffer = await buildLeaderboardCard({
+            title: heading,
+            subtitle: footer,
+            accent: `#${color.toString(16).padStart(6, '0')}`,
+            entries: rows,
+        });
+
+        return { content: '', embeds: [], files: [new AttachmentBuilder(buffer, { name: 'leaderboard.png' })], attachments: [] };
+    } catch (error) {
+        console.error('Failed to build leaderboard card:', error);
+    }
+
+    const lines = rows.map(row => `**${row.position}.** ${row.username} — Level ${row.level} (${row.xp} XP)`);
+
+    const embed = new EmbedBuilder()
         .setColor(color)
-        .setTitle(title)
+        .setTitle(`${emoji} ${heading}`)
         .setDescription(lines.join('\n'))
         .setFooter({ text: footer });
+
+    return { content: '', embeds: [embed], files: [], attachments: [] };
 };
 
 const buildButtons = (page, pages, finished) => {
@@ -101,6 +150,8 @@ module.exports = {
                 .setRequired(false)
                 .addChoices(
                     { name: 'This server', value: 'server' },
+                    { name: 'This server — this week', value: 'week' },
+                    { name: 'This server — this month', value: 'month' },
                     { name: 'Global — combined XP', value: 'global' },
                     { name: 'Global — best server', value: 'best' },
                 )
@@ -108,31 +159,31 @@ module.exports = {
     async execute(interaction) {
         const scope = interaction.options.getString('scope') || 'server';
 
-        if (scope !== 'server' && !getConfig(interaction.guild.id).globalLeaderboard) {
+        if (!SERVER_SCOPES.includes(scope) && !getConfig(interaction.guild.id).globalLeaderboard) {
             await interaction.reply({ content: '❌ This server has opted out of the global leaderboard.' });
-            return;
-        }
-
-        const { entries, guilds } = collectEntries(interaction, scope);
-
-        const sorted = Object.entries(entries)
-            .sort((a, b) => b[1] - a[1])
-            .slice(0, MAX_ENTRIES);
-
-        if (sorted.length === 0) {
-            await interaction.reply({ content: 'No one has earned any XP yet.' });
             return;
         }
 
         await interaction.deferReply();
 
-        const pages = Math.ceil(sorted.length / PAGE_SIZE);
+        const { entries, guilds } = await collectEntries(interaction, scope);
+
+        if (entries.length === 0) {
+            const empty = scope === 'week' || scope === 'month'
+                ? `No one has earned any XP this ${scope} yet.`
+                : 'No one has earned any XP yet.';
+
+            await interaction.editReply({ content: empty });
+            return;
+        }
+
+        const pages = Math.ceil(entries.length / PAGE_SIZE);
 
         let page = 0;
 
-        const embed = await buildPage(interaction, scope, sorted, page, guilds);
+        const first = await buildPage(interaction, scope, entries, page, guilds);
         const message = await interaction.editReply({
-            embeds: [embed],
+            ...first,
             components: pages > 1 ? [buildButtons(page, pages, false)] : [],
         });
 
@@ -154,10 +205,10 @@ module.exports = {
             page += button.customId === 'leaderboard-next' ? 1 : -1;
             page = Math.min(Math.max(page, 0), pages - 1);
 
-            const nextEmbed = await buildPage(interaction, scope, sorted, page, guilds);
+            const next = await buildPage(interaction, scope, entries, page, guilds);
 
             await interaction.editReply({
-                embeds: [nextEmbed],
+                ...next,
                 components: [buildButtons(page, pages, false)],
             });
         });

@@ -14,6 +14,14 @@ const isLight = (hex) => {
     return luminance > 0.55;
 };
 
+const formatNumber = (number) => new Intl.NumberFormat('en-US').format(number);
+
+const formatVoice = (minutes) => {
+    const hours = Math.floor(minutes / 60);
+
+    return hours > 0 ? `${hours}H ${minutes % 60}M` : `${minutes}M`;
+};
+
 const roundedRect = (ctx, x, y, width, height, radius) => {
     ctx.beginPath();
     ctx.moveTo(x + radius, y);
@@ -40,6 +48,7 @@ const buildRankCard = async (options) => {
     const globalRank = options.globalRank;
     const currentXp = options.currentXp;
     const neededXp = options.neededXp;
+    const stats = options.stats;
 
     const canvas = createCanvas(WIDTH, HEIGHT);
     const ctx = canvas.getContext('2d');
@@ -141,11 +150,123 @@ const buildRankCard = async (options) => {
 
     ctx.font = '24px sans-serif';
     ctx.fillStyle = mutedColor;
-    const xpText = `${currentXp} / ${neededXp} XP`;
+    const xpText = `${formatNumber(currentXp)} / ${formatNumber(neededXp)} XP`;
     const xpWidth = ctx.measureText(xpText).width;
-    ctx.fillText(xpText, WIDTH - 50 - xpWidth, barY + barHeight + 32);
+
+    if (stats) {
+        ctx.fillText(xpText, WIDTH - 50 - xpWidth, barY - 14);
+
+        const parts = [`${formatNumber(stats.messages)} MSGS`, `${formatVoice(stats.voiceMinutes)} VOICE`];
+
+        if (stats.streak > 0) parts.push(`${stats.streak} DAY STREAK`);
+
+        ctx.font = '22px sans-serif';
+        ctx.fillText(parts.join('  ·  '), barX, barY + barHeight + 32);
+    } else {
+        ctx.fillText(xpText, WIDTH - 50 - xpWidth, barY + barHeight + 32);
+    }
 
     return canvas.toBuffer('image/png');
 };
 
-module.exports = { buildRankCard };
+const ROW_HEIGHT = 72;
+const BOARD_TOP = 110;
+const BOARD_AVATAR = 52;
+
+const fitText = (ctx, text, maxWidth) => {
+    if (ctx.measureText(text).width <= maxWidth) return text;
+
+    let trimmed = text;
+
+    while (trimmed.length > 1 && ctx.measureText(`${trimmed}…`).width > maxWidth) {
+        trimmed = trimmed.slice(0, -1);
+    }
+
+    return `${trimmed}…`;
+};
+
+const buildLeaderboardCard = async (options) => {
+    const title = options.title;
+    const subtitle = options.subtitle;
+    const accent = options.accent;
+    const entries = options.entries;
+
+    const height = BOARD_TOP + (entries.length * ROW_HEIGHT) + 30;
+    const canvas = createCanvas(WIDTH, height);
+    const ctx = canvas.getContext('2d');
+
+    ctx.fillStyle = '#1E1F22';
+    ctx.fillRect(0, 0, WIDTH, height);
+
+    ctx.fillStyle = '#FFFFFF';
+    ctx.font = 'bold 38px sans-serif';
+    ctx.fillText(fitText(ctx, title, WIDTH - 100), 50, 58);
+
+    if (subtitle) {
+        ctx.fillStyle = 'rgba(255,255,255,0.6)';
+        ctx.font = '22px sans-serif';
+        ctx.fillText(fitText(ctx, subtitle, WIDTH - 100), 50, 90);
+    }
+
+    ctx.font = '24px sans-serif';
+    const xpColumn = Math.max(...entries.map(entry => ctx.measureText(`${formatNumber(entry.xp)} XP`).width));
+
+    const avatars = await Promise.all(entries.map(entry =>
+        entry.avatarUrl ? loadImage(entry.avatarUrl).catch(() => null) : null,
+    ));
+
+    entries.forEach((entry, index) => {
+        const rowY = BOARD_TOP + (index * ROW_HEIGHT);
+        const centerY = rowY + (ROW_HEIGHT / 2);
+
+        ctx.fillStyle = index % 2 === 0 ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.02)';
+        roundedRect(ctx, 30, rowY + 4, WIDTH - 60, ROW_HEIGHT - 8, 14);
+        ctx.fill();
+
+        const podium = ['#F1C40F', '#BDC3C7', '#CD7F32'];
+
+        ctx.fillStyle = podium[entry.position - 1] || 'rgba(255,255,255,0.7)';
+        ctx.font = 'bold 28px sans-serif';
+        ctx.fillText(`#${entry.position}`, 50, centerY + 10);
+
+        const avatarX = 130;
+        const avatarY = centerY - (BOARD_AVATAR / 2);
+
+        ctx.save();
+        ctx.beginPath();
+        ctx.arc(avatarX + (BOARD_AVATAR / 2), centerY, BOARD_AVATAR / 2, 0, Math.PI * 2);
+        ctx.closePath();
+        ctx.fillStyle = accent;
+        ctx.fill();
+
+        if (avatars[index]) {
+            ctx.clip();
+            ctx.drawImage(avatars[index], avatarX, avatarY, BOARD_AVATAR, BOARD_AVATAR);
+        }
+
+        ctx.restore();
+
+        ctx.font = '24px sans-serif';
+        ctx.fillStyle = 'rgba(255,255,255,0.6)';
+        const xpText = `${formatNumber(entry.xp)} XP`;
+        const xpWidth = ctx.measureText(xpText).width;
+        ctx.fillText(xpText, WIDTH - 50 - xpWidth, centerY + 9);
+
+        ctx.font = 'bold 26px sans-serif';
+        ctx.fillStyle = accent;
+        const levelText = `LVL ${entry.level}`;
+        const levelWidth = ctx.measureText(levelText).width;
+        const levelX = WIDTH - 50 - xpColumn - 30 - levelWidth;
+        ctx.fillText(levelText, levelX, centerY + 9);
+
+        const nameX = avatarX + BOARD_AVATAR + 20;
+
+        ctx.font = 'bold 28px sans-serif';
+        ctx.fillStyle = '#FFFFFF';
+        ctx.fillText(fitText(ctx, entry.username, levelX - nameX - 20), nameX, centerY + 10);
+    });
+
+    return canvas.toBuffer('image/png');
+};
+
+module.exports = { buildRankCard, buildLeaderboardCard };

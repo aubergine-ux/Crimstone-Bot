@@ -19,8 +19,8 @@ A Discord bot built with [Discord.js](https://discord.js.org/)! ~ invite it to y
 
 ## Features
 
-- **Moderation** - Complete server management with `ban`, `kick`, `timeout`, `purge` messages, and `echo` tools, plus a per-member history lookup with `modstats`.
-- **Levelling** - Members earn XP as they chat or talk in voice, with rank cards (`rank`), role rewards (`levelrole`), XP boosts (`xpboost`), custom level-up messages, and server or global leaderboards (`leaderboard`).
+- **Moderation** - Complete server management with `ban`, `kick`, `timeout`, `purge` messages, and `echo` tools, plus a per-member history lookup with `modstats` and automatic punishments when members reach a number of warnings (`warnrules`).
+- **Levelling** - Members earn XP as they chat or talk in voice, with rank cards (`rank`), role rewards (`levelrole`), XP boosts (`xpboost`), custom level-up messages, and daily streaks, and server, weekly, monthly or global leaderboards (`leaderboard`).
 - **Automod** - Spam timeouts, invite, link and word filters, raid alerts and a minimum account age, set up with `automod`.
 - **Welcome** - Join and leave messages and auto roles (`welcome`), plus self-assign role buttons (`buttonroles`).
 - **Community** - Button-entry giveaways with level requirements (`giveaway`), a starboard (`starboard`), private support tickets with transcripts (`ticket`), and YouTube and Twitch alerts (`alerts`).
@@ -37,10 +37,11 @@ Members earn XP for chatting, on a 10 second cooldown per member. With `/config 
 
 | Command | What it does |
 | --- | --- |
-| `/rank [target]` | A rank card showing level, progress, server rank and global rank |
-| `/leaderboard [scope]` | Top members — this server, global combined XP, or global best server |
+| `/rank [target]` | A rank card showing level, progress, server and global rank, messages sent, voice time and daily streak |
+| `/leaderboard [scope]` | An image of the top members — this server, this week, this month, global combined XP, or global best server |
 | `/levelrole` | Set up roles awarded at chosen levels |
 | `/xpboost` | Multiply XP for chosen roles or channels (a member's best role boost × the channel boost) |
+| `/config streaks` | Turn the daily streak XP bonus on or off |
 | `/config levelmessage` | Write your own level-up message with `{user}`, `{username}`, `{level}` and `{server}` |
 | `/givexp`, `/setxp` | Adjust a member's XP by hand |
 | `/resetxp [target]` | Reset one member's XP, or the whole server's after a confirmation |
@@ -49,13 +50,31 @@ Members earn XP for chatting, on a 10 second cooldown per member. With `/config 
 
 Reward roles are also restored when a member rejoins, and updated whenever `/givexp`, `/setxp` or `/resetxp` changes their level.
 
-`/leaderboard` has three scopes:
+Chatting or talking in voice on consecutive days builds a daily streak (days are counted in UTC). Each day after the first adds +2% XP, up to +20% at an 11 day streak. Missing a day resets it. Turn the bonus off with `/config streaks enabled:False`; streaks still show on rank cards.
+
+`/leaderboard` has five scopes:
 
 - **This server** — members ranked within the current server.
+- **This week / This month** — XP earned since Monday or since the 1st (UTC), so newer members have a board they can win.
 - **Global — combined XP** — every server added together, so time spent across many servers counts.
 - **Global — best server** — each member's single strongest server, which rewards depth over breadth.
 
-Servers are included in the global boards by default. Opt out with `/config global enabled:False`, which removes the server's XP from everyone's global totals and hides the global scopes from its members.
+Server boards only list people who are still in the server. Servers are included in the global boards by default. Opt out with `/config global enabled:False`, which removes the server's XP from everyone's global totals and hides the global scopes from its members.
+
+---
+
+## Warnings
+
+Every warning is a case in the moderation history, so `/modstats` shows them alongside bans, kicks and timeouts. `/unwarn` deactivates a warning without deleting its case.
+
+| Command | What it does |
+| --- | --- |
+| `/warn`, `/unwarn`, `/warnings` | Warn a member, remove one of their warnings, or list the active ones |
+| `/warnrules add` | Automatically time out, kick or ban a member when they reach a number of warnings, like 3 → 1 hour timeout, 5 → kick |
+| `/warnrules expiry` | Let warnings stop counting after a number of days. Expired warnings stay in the history |
+| `/warnrules list`, `/warnrules remove` | See or remove rules |
+
+A rule fires once, when a member reaches exactly that many active warnings, and is logged as its own case.
 
 ---
 
@@ -115,19 +134,21 @@ YouTube alerts work out of the box. Twitch alerts need `TWITCH_CLIENT_ID` and `T
 
 ## Data storage
 
-Crimstone keeps its data in JSON files next to the commands that use them, all through a shared store (`commands/utility/jsonStore.js`) that:
+Crimstone keeps everything in a SQLite database at `data/crimstone.db` (`commands/utility/database.js`):
 
-- writes to a temporary file and renames it into place, so an interrupted write cannot truncate a store,
-- refuses to overwrite a file it cannot parse, keeping a `.corrupt-<timestamp>` copy and logging loudly instead,
-- keeps data in memory and flushes busy stores on a timer rather than on every message,
-- flushes everything on `SIGINT` and `SIGTERM`, so a restart does not drop pending writes.
+- levels and moderation cases have their own tables, so leaderboards, streaks and case lookups are single queries,
+- settings and other stores go through a shared store (`commands/utility/jsonStore.js`) that saves one row per server and only rewrites the servers that changed,
+- every save is a transaction, so a crash or power cut can't leave half-written data,
+- busy stores flush on a timer, and everything flushes on `SIGINT` and `SIGTERM`.
+
+Older versions kept data in JSON files in `commands/utility/`. On first start those are imported automatically and renamed to `.json.migrated`. Once you've checked everything is there, the `.migrated` files can be deleted. `data/` and the JSON files are git-ignored and must never be committed.
 
 ---
 
 ## Self Hosting
 
 ### Prerequisites
-- [Node.js](https://nodejs.org/) v18+
+- [Node.js](https://nodejs.org/) v22+
 - A bot token from the [Discord Developer Portal](https://discord.com/developers/applications)
 - The **Server Members Intent** and **Message Content Intent** enabled for the application, under *Bot → Privileged Gateway Intents*. Both are privileged, and the bot will not log in without them.
 
@@ -135,7 +156,7 @@ Crimstone keeps its data in JSON files next to the commands that use them, all t
 1. Clone the repo and run `npm install`
 2. Create `config.json` and `.env` with your bot token and client ID
 3. Optionally add `TWITCH_CLIENT_ID` and `TWITCH_CLIENT_SECRET` for Twitch alerts, and `TOPGG_TOKEN` to `.env` (from your bot's top.gg page → Edit → Webhooks). With it, `/vote` shows whether a member has voted and the server count is posted to top.gg every 30 minutes.
-4. Run `node deploy-commands.js` to register commands
-5. Start the bot with `node index.js`
+4. Run `npm run deploy` to register commands
+5. Start the bot with `npm start`, or keep it running and restart it after crashes with [pm2](https://pm2.keymetrics.io/): `pm2 start ecosystem.config.js`
 
 ---

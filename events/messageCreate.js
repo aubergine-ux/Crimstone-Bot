@@ -2,6 +2,7 @@ const { Events } = require('discord.js');
 const { readAfk, writeAfk } = require('../commands/utility/afkStore.js');
 const { getConfig } = require('../commands/utility/guildConfig.js');
 const { awardXp } = require('../commands/utility/awardXp.js');
+const { addMessage } = require('../commands/utility/levelStore.js');
 const { runAutomod } = require('../commands/utility/automodEngine.js');
 const { recordMessage } = require('../commands/utility/activityStore.js');
 
@@ -70,6 +71,8 @@ module.exports = {
                 const lastXp = xpCooldowns.get(cooldownKey) || 0;
 
                 pruneCooldowns(now);
+
+                addMessage(message.guild.id, message.author.id);
 
                 if (now - lastXp > XP_COOLDOWN) {
                     xpCooldowns.set(cooldownKey, now);

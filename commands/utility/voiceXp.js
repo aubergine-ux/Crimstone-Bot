@@ -1,5 +1,6 @@
 const { getConfig } = require('./guildConfig.js');
 const { awardXp } = require('./awardXp.js');
+const { addVoiceMinute } = require('./levelStore.js');
 
 const VOICE_INTERVAL = 60000;
 
@@ -35,6 +36,7 @@ const tick = async (client) => {
 
                 for (const member of active.values()) {
                     try {
+                        addVoiceMinute(guild.id, member.id);
                         await awardXp(member, Math.floor(Math.random() * 11) + 15, channel);
                     } catch (error) {
                         console.error('Failed to award voice XP:', error.message);

@@ -1,7 +1,7 @@
 require('dotenv').config();
 const fs = require('node:fs');
 const path = require('node:path');
-const { Client, Collection, GatewayIntentBits, Partials } = require('discord.js');
+const { Client, Collection, Events, GatewayIntentBits, Partials } = require('discord.js');
 const { flushAll } = require('./commands/utility/jsonStore.js');
 
 const client = new Client({ intents: [
@@ -29,6 +29,10 @@ for (const folder of commandFolders) {
 		const filePath = path.join(commandsPath, file);
 		const command = require(filePath);
 		if ('data' in command && 'execute' in command) {
+			if (client.commands.has(command.data.name)) {
+				console.log(`[WARNING] Skipped ${filePath}: another file already registers /${command.data.name}.`);
+				continue;
+			}
 			client.commands.set(command.data.name, command);
 		}
 	}
@@ -45,10 +49,19 @@ for (const file of eventFiles) {
 			console.log(`[WARNING] An event in ${filePath} is missing a "name" or "execute" property.`);
 			continue;
 		}
+		// One failing handler shouldn't take the rest of the bot down with it.
+		const run = async (...args) => {
+			try {
+				await event.execute(...args);
+			} catch (error) {
+				console.error(`[EVENT ERROR] ${event.name} in ${file}:`, error);
+			}
+		};
+
 		if (event.once) {
-			client.once(event.name, (...args) => event.execute(...args));
+			client.once(event.name, run);
 		} else {
-			client.on(event.name, (...args) => event.execute(...args));
+			client.on(event.name, run);
 		}
 	}
 }
@@ -59,6 +72,21 @@ const shutdown = (signal) => {
 	client.destroy();
 	process.exit(0);
 };
+
+client.on(Events.Error, (error) => console.error('[CLIENT ERROR]', error));
+client.on(Events.ShardError, (error, shardId) => console.error(`[SHARD ERROR] Shard ${shardId}:`, error));
+
+process.on('unhandledRejection', (error) => {
+	console.error('[UNHANDLED REJECTION]', error);
+});
+
+// After an uncaught exception the process is in an unknown state, so save and exit
+// and let the process manager start a fresh one.
+process.on('uncaughtException', (error) => {
+	console.error('[UNCAUGHT EXCEPTION]', error);
+	flushAll();
+	process.exit(1);
+});
 
 process.on('SIGINT', () => shutdown('SIGINT'));
 process.on('SIGTERM', () => shutdown('SIGTERM'));

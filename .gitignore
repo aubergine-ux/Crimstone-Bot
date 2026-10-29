@@ -1,17 +1,16 @@
 node_modules
 .env
 config.json
-warnings.json
-afk.json
-levels.json
-rankPrefs.json
-levelRoles.json
-modCases.json
-automodConfig.json
-welcomeConfig.json
-giveaways.json
-starboard.json
-tickets.json
-alerts.json
-*.json.tmp
-*.json.corrupt-*
+
+# Bot data lives in data/crimstone.db. The JSON files are the old storage, kept only
+# until they're imported, and must never be committed.
+data/
+commands/utility/*.json
+commands/utility/*.json.*
+*.db
+*.db-shm
+*.db-wal
+
+# Local leftovers
+.directory
+*.bundle

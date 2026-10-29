@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, InteractionContextType } = require('discord.js');
-const { readLevels, writeLevels } = require('../utility/levelStore.js');
+const { importXp } = require('../utility/levelStore.js');
 
 const PAGE_LIMIT = 1000;
 const MAX_PAGES = 50;
@@ -71,11 +71,8 @@ module.exports = {
             return;
         }
 
-        const levels = readLevels();
+        const entries = [];
 
-        if (!levels[guildId]) levels[guildId] = {};
-
-        let imported = 0;
         let skipped = 0;
 
         players.forEach(player => {
@@ -86,16 +83,12 @@ module.exports = {
                 return;
             }
 
-            const current = levels[guildId][player.id] || 0;
-
-            if (mode === 'replace') levels[guildId][player.id] = xp;
-            if (mode === 'add') levels[guildId][player.id] = current + xp;
-            if (mode === 'higher') levels[guildId][player.id] = Math.max(current, xp);
-
-            imported++;
+            entries.push({ userId: String(player.id), xp: xp });
         });
 
-        writeLevels(levels);
+        importXp(guildId, entries, mode);
+
+        const imported = entries.length;
 
         const modeNames = { higher: 'Kept whichever was higher', replace: 'Replaced with MEE6 XP', add: 'Added MEE6 XP on top' };
 

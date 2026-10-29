@@ -1,11 +1,19 @@
 const { PermissionFlagsBits } = require('discord.js');
-const { readLevels, writeLevels } = require('./levelStore.js');
+const { addXp, touchStreak } = require('./levelStore.js');
 const { getLevelFromXp } = require('./levelMath.js');
 const { getConfig } = require('./guildConfig.js');
 const { applyLevelRoles } = require('./applyLevelRoles.js');
 const { fillTemplate, memberValues } = require('./template.js');
 
 const DEFAULT_LEVELUP = '🎉 **{username}** reached level **{level}**!';
+
+const STREAK_STEP = 0.02;
+const STREAK_CAP = 10;
+
+// +2% per day of streak after the first, up to +20%.
+const streakBoost = (streak) => {
+    return 1 + Math.min(Math.max(streak - 1, 0), STREAK_CAP) * STREAK_STEP;
+};
 
 const boostFor = (member, channel, config) => {
     let roleBoost = 1;
@@ -65,20 +73,14 @@ const announceLevelUp = async (member, level, awarded, channel, config) => {
 const awardXp = async (member, baseAmount, channel) => {
     const guildId = member.guild.id;
     const config = getConfig(guildId);
-    const gained = Math.round(baseAmount * boostFor(member, channel, config));
+    const streak = touchStreak(guildId, member.id);
+    const multiplier = boostFor(member, channel, config) * (config.streakBonus ? streakBoost(streak) : 1);
+    const gained = Math.round(baseAmount * multiplier);
 
-    const levels = readLevels();
+    const totals = addXp(guildId, member.id, gained);
 
-    if (!levels[guildId]) levels[guildId] = {};
-    if (!levels[guildId][member.id]) levels[guildId][member.id] = 0;
-
-    const before = getLevelFromXp(levels[guildId][member.id]);
-
-    levels[guildId][member.id] += gained;
-
-    const after = getLevelFromXp(levels[guildId][member.id]);
-
-    writeLevels(levels);
+    const before = getLevelFromXp(totals.before);
+    const after = getLevelFromXp(totals.after);
 
     if (after.level > before.level) {
         const awarded = await applyLevelRoles(member, after.level).catch(() => []);
@@ -88,4 +90,4 @@ const awardXp = async (member, baseAmount, channel) => {
     return gained;
 };
 
-module.exports = { awardXp, boostFor, DEFAULT_LEVELUP };
+module.exports = { awardXp, boostFor, streakBoost, DEFAULT_LEVELUP };

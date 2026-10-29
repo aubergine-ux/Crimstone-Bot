@@ -11,6 +11,8 @@ const DEFAULTS = {
     globalLeaderboard: true,
     levelupMessage: null,
     voiceXp: false,
+    streakBonus: true,
+    warnExpiryDays: 0,
     roleBoosts: {},
     channelBoosts: {},
 };
@@ -34,6 +36,8 @@ const getConfig = (guildId) => {
         globalLeaderboard: guildConfig.globalLeaderboard !== undefined ? guildConfig.globalLeaderboard : DEFAULTS.globalLeaderboard,
         levelupMessage: guildConfig.levelupMessage || DEFAULTS.levelupMessage,
         voiceXp: guildConfig.voiceXp === true,
+        streakBonus: guildConfig.streakBonus !== undefined ? guildConfig.streakBonus : DEFAULTS.streakBonus,
+        warnExpiryDays: guildConfig.warnExpiryDays || DEFAULTS.warnExpiryDays,
         roleBoosts: { ...(guildConfig.roleBoosts || DEFAULTS.roleBoosts) },
         channelBoosts: { ...(guildConfig.channelBoosts || DEFAULTS.channelBoosts) },
     };

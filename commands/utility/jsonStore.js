@@ -1,77 +1,50 @@
-const fs = require('fs');
-const path = require('path');
+const { db, migrate, readLegacy, retireLegacy } = require('./database.js');
 
 const stores = [];
 
-const createStore = (fileName, flushDelay = 0) => {
-    const filePath = path.join(__dirname, fileName);
-    const tempPath = `${filePath}.tmp`;
+const selectRows = db.prepare('SELECT key, value FROM stores WHERE name = ?');
+const upsertRow = db.prepare(`
+    INSERT INTO stores (name, key, value) VALUES (?, ?, ?)
+    ON CONFLICT (name, key) DO UPDATE SET value = excluded.value
+`);
+const deleteRow = db.prepare('DELETE FROM stores WHERE name = ? AND key = ?');
 
-    let cache = null;
-    let stamp = null;
+// Each store keeps its data as one row per top-level key (usually a guild ID), so a
+// save only rewrites the guilds that actually changed.
+const createStore = (fileName, flushDelay = 0) => {
+    const name = fileName.replace(/\.json$/, '');
+
+    migrate(`store:${name}`, () => {
+        const legacy = readLegacy(fileName);
+
+        if (!legacy) return;
+
+        Object.keys(legacy).forEach(key => {
+            const existing = db.prepare('SELECT 1 FROM stores WHERE name = ? AND key = ?').get(name, key);
+
+            if (!existing) upsertRow.run(name, key, JSON.stringify(legacy[key]));
+        });
+
+        retireLegacy(fileName);
+    });
+
+    const cache = {};
+    const saved = {};
+
+    selectRows.all(name).forEach(row => {
+        try {
+            cache[row.key] = JSON.parse(row.value);
+            saved[row.key] = row.value;
+        } catch (error) {
+            console.error(`[STORE] Skipped an unreadable ${name} entry for ${row.key}:`, error.message);
+        }
+    });
+
+    let current = cache;
     let dirty = false;
-    let blocked = false;
     let timer = null;
 
-    const fingerprint = () => {
-        try {
-            const stats = fs.statSync(filePath);
-            return `${stats.mtimeMs}-${stats.size}`;
-        } catch (error) {
-            return null;
-        }
-    };
-
-    const quarantine = () => {
-        const stampedPath = `${filePath}.corrupt-${Date.now()}`;
-
-        try {
-            fs.copyFileSync(filePath, stampedPath);
-            console.error(`[STORE] Kept a copy of the unreadable ${fileName} at ${path.basename(stampedPath)}.`);
-        } catch (error) {
-            console.error(`[STORE] Could not back up the unreadable ${fileName}:`, error.message);
-        }
-    };
-
-    const load = () => {
-        let data;
-
-        try {
-            data = fs.readFileSync(filePath, 'utf8');
-        } catch (error) {
-            if (error.code === 'ENOENT') {
-                blocked = false;
-                return {};
-            }
-
-            blocked = true;
-            console.error(`[STORE] Cannot read ${fileName}, so it will not be written to:`, error.message);
-            return {};
-        }
-
-        try {
-            const parsed = JSON.parse(data);
-            blocked = false;
-            return parsed;
-        } catch (error) {
-            if (!blocked) quarantine();
-
-            blocked = true;
-            console.error(`[STORE] ${fileName} is corrupt and will not be overwritten:`, error.message);
-            return {};
-        }
-    };
-
-    const read = () => {
-        const current = fingerprint();
-
-        if (cache === null || (!dirty && current !== stamp)) {
-            cache = load();
-            stamp = current;
-        }
-
-        return cache;
-    };
+    const read = () => current;
 
     const flush = () => {
         if (timer) {
@@ -83,22 +56,33 @@ const createStore = (fileName, flushDelay = 0) => {
 
         dirty = false;
 
-        if (blocked) {
-            console.error(`[STORE] Refusing to save ${fileName} over the unreadable copy on disk. Repair or delete it, then restart.`);
-            return;
-        }
-
         try {
-            fs.writeFileSync(tempPath, JSON.stringify(cache, null, 2));
-            fs.renameSync(tempPath, filePath);
-            stamp = fingerprint();
+            db.transaction(() => {
+                Object.keys(current).forEach(key => {
+                    const value = JSON.stringify(current[key]);
+
+                    if (value === undefined) return;
+
+                    if (saved[key] !== value) {
+                        upsertRow.run(name, key, value);
+                        saved[key] = value;
+                    }
+                });
+
+                Object.keys(saved).forEach(key => {
+                    if (!(key in current)) {
+                        deleteRow.run(name, key);
+                        delete saved[key];
+                    }
+                });
+            })();
         } catch (error) {
-            console.error(`[STORE] Failed to save ${fileName}:`, error.message);
+            console.error(`[STORE] Failed to save ${name}:`, error.message);
         }
     };
 
     const write = (value) => {
-        cache = value;
+        current = value;
         dirty = true;
 
         if (flushDelay > 0) {

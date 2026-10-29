@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, PermissionFlagsBits, InteractionContextType } = require('discord.js');
-const { readWarnings, writeWarnings } = require('../utility/warnStore.js');
+const { getWarnings } = require('../utility/warnStore.js');
 const { logAction } = require('../utility/modLog.js');
+const { escalate } = require('../utility/warnEscalation.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -19,20 +20,7 @@ module.exports = {
         const reason = interaction.options.getString('reason');
         const guildId = interaction.guild.id;
 
-        const warnings = readWarnings();
-
-        if (!warnings[guildId]) warnings[guildId] = {};
-        if (!warnings[guildId][user.id]) warnings[guildId][user.id] = [];
-
-        warnings[guildId][user.id].push({
-            reason: reason,
-            moderator: interaction.user.tag,
-            timestamp: Date.now(),
-        });
-
-        writeWarnings(warnings);
-
-        const warnCount = warnings[guildId][user.id].length;
+        const warnCount = getWarnings(guildId, user.id).length + 1;
 
         let delivered = true;
 
@@ -56,5 +44,9 @@ module.exports = {
             reason: reason,
             extra: `Warning #${warnCount} for this user.${delivered ? '' : ' (DM could not be delivered)'}`,
         });
+
+        const outcome = await escalate(interaction.guild, user, warnCount);
+
+        if (outcome) await interaction.followUp({ content: outcome });
     },
 };

@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, AttachmentBuilder, InteractionContextType } = require('discord.js');
-const { readLevels, readGlobalTotals } = require('../utility/levelStore.js');
+const { getMember, guildPosition, globalRanking } = require('../utility/levelStore.js');
 const { getLevelFromXp } = require('../utility/levelMath.js');
 const { getConfig, optedOutGuilds } = require('../utility/guildConfig.js');
 const { resolvePrefs } = require('../utility/rankPrefs.js');
@@ -19,22 +19,18 @@ module.exports = {
 
         await interaction.deferReply();
 
-        const levels = readLevels();
-        const guildLevels = levels[guildId] || {};
-        const totalXp = guildLevels[user.id] || 0;
+        const stats = getMember(guildId, user.id);
+        const totalXp = stats.xp;
 
         const { level, currentXp, neededXp } = getLevelFromXp(totalXp);
 
-        const sorted = Object.entries(guildLevels).sort((a, b) => b[1] - a[1]);
-        const position = sorted.findIndex(entry => entry[0] === user.id);
-        const rank = position === -1 ? null : position + 1;
+        const rank = guildPosition(guildId, user.id);
 
         let globalRank = null;
 
         if (getConfig(guildId).globalLeaderboard) {
-            const { totals } = readGlobalTotals(optedOutGuilds());
-            const globalSorted = Object.entries(totals).sort((a, b) => b[1] - a[1]);
-            const globalPosition = globalSorted.findIndex(entry => entry[0] === user.id);
+            const { entries } = globalRanking('combined', optedOutGuilds());
+            const globalPosition = entries.findIndex(entry => entry[0] === user.id);
 
             if (globalPosition !== -1) globalRank = globalPosition + 1;
         }
@@ -54,6 +50,7 @@ module.exports = {
                 globalRank: globalRank,
                 currentXp: currentXp,
                 neededXp: neededXp,
+                stats: stats,
             });
 
             const attachment = new AttachmentBuilder(buffer, { name: 'rank.png' });

@@ -2,7 +2,7 @@ const { SlashCommandBuilder, PermissionFlagsBits, ChannelType, InteractionContex
 const { readGiveaways, addGiveaway, updateGiveaway, giveawaysFor } = require('../utility/giveawayStore.js');
 const { scheduleGiveaway, endGiveaway, rerollGiveaway, giveawayEmbed, giveawayRow } = require('../utility/giveawayScheduler.js');
 const { parseDuration, formatDuration } = require('../utility/duration.js');
-const { readLevels } = require('../utility/levelStore.js');
+const { getXp } = require('../utility/levelStore.js');
 const { getLevelFromXp } = require('../utility/levelMath.js');
 
 const MIN_DURATION = 60000;
@@ -188,7 +188,7 @@ module.exports = {
             entrants.splice(index, 1);
         } else {
             if (giveaway.minLevel > 0) {
-                const xp = (readLevels()[giveaway.guildId] || {})[userId] || 0;
+                const xp = getXp(giveaway.guildId, userId);
                 const level = getLevelFromXp(xp).level;
 
                 if (level < giveaway.minLevel) {

@@ -50,6 +50,13 @@ module.exports = {
                         .setDescription('Whether time in voice earns XP')
                         .setRequired(true)))
         .addSubcommand(subcommand =>
+            subcommand.setName('streaks')
+                .setDescription('Give members bonus XP for chatting on consecutive days')
+                .addBooleanOption(option =>
+                    option.setName('enabled')
+                        .setDescription('Whether daily streaks boost XP (up to +20%)')
+                        .setRequired(true)))
+        .addSubcommand(subcommand =>
             subcommand.setName('levelmessage')
                 .setDescription('Write your own level-up message')
                 .addStringOption(option =>
@@ -105,6 +112,7 @@ module.exports = {
                     { name: 'Level-up messages', value: levelupValue, inline: true },
                     { name: 'XP system', value: config.xpEnabled ? 'Enabled' : 'Disabled', inline: true },
                     { name: 'Voice XP', value: config.voiceXp ? 'Enabled' : 'Disabled', inline: true },
+                    { name: 'Streak bonus', value: config.streakBonus ? 'Enabled' : 'Disabled', inline: true },
                     { name: 'Mod log', value: config.modlogChannel ? `<#${config.modlogChannel}>` : 'Disabled', inline: true },
                     { name: 'Global leaderboard', value: config.globalLeaderboard ? 'Joined' : 'Opted out', inline: true },
                     { name: 'XP-ignored channels', value: ignoredValue },
@@ -170,6 +178,19 @@ module.exports = {
                 await interaction.reply({ content: '✅ Members will earn XP every minute they talk in voice with someone else. Muted, deafened and AFK-channel members don\'t earn any.' });
             } else {
                 await interaction.reply({ content: '✅ Voice channels no longer earn XP.' });
+            }
+            return;
+        }
+
+        if (subcommand === 'streaks') {
+            const enabled = interaction.options.getBoolean('enabled');
+
+            setConfig(guildId, { streakBonus: enabled });
+
+            if (enabled) {
+                await interaction.reply({ content: '✅ Members earn +2% XP for each day in a row they chat, up to +20%.' });
+            } else {
+                await interaction.reply({ content: '✅ Streaks no longer boost XP. They still show on rank cards.' });
             }
             return;
         }

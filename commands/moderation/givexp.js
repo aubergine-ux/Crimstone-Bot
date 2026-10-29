@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, InteractionContextType } = require('discord.js');
-const { readLevels, writeLevels } = require('../utility/levelStore.js');
+const { getXp, setXp } = require('../utility/levelStore.js');
 const { getLevelFromXp } = require('../utility/levelMath.js');
 const { syncLevelRoles } = require('../utility/applyLevelRoles.js');
 
@@ -19,18 +19,9 @@ module.exports = {
         const amount = interaction.options.getInteger('amount');
         const guildId = interaction.guild.id;
 
-        const levels = readLevels();
+        const newTotal = Math.max(0, getXp(guildId, user.id) + amount);
 
-        if (!levels[guildId]) levels[guildId] = {};
-        if (!levels[guildId][user.id]) levels[guildId][user.id] = 0;
-
-        levels[guildId][user.id] += amount;
-
-        if (levels[guildId][user.id] < 0) levels[guildId][user.id] = 0;
-
-        writeLevels(levels);
-
-        const newTotal = levels[guildId][user.id];
+        setXp(guildId, user.id, newTotal);
         const { level } = getLevelFromXp(newTotal);
 
         const embed = new EmbedBuilder()

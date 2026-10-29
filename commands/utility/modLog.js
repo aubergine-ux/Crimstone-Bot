@@ -1,11 +1,64 @@
 const { EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const { getConfig } = require('./guildConfig.js');
-const { createStore } = require('./jsonStore.js');
+const { db, migrate, readLegacy, retireLegacy } = require('./database.js');
 
-const store = createStore('modCases.json');
-const historyStore = createStore('modHistory.json');
+// Warnings used to live in their own file, separate from the case history. They're now
+// warn cases that stay active until removed, so this matches each old warning to its case.
+const WARNING_MATCH_WINDOW = 120000;
 
-const HISTORY_LIMIT = 500;
+migrate('cases', () => {
+    const counters = readLegacy('modCases.json') || {};
+    const history = readLegacy('modHistory.json') || {};
+    const warnings = readLegacy('warnings.json') || {};
+
+    const insertCase = db.prepare(`
+        INSERT OR IGNORE INTO cases (guild_id, case_number, action, user_id, user_tag, moderator, reason, duration, active, timestamp)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `);
+    const setCounter = db.prepare(`
+        INSERT INTO case_counters (guild_id, last_case) VALUES (?, ?)
+        ON CONFLICT (guild_id) DO UPDATE SET last_case = MAX(last_case, excluded.last_case)
+    `);
+
+    Object.keys(history).forEach(guildId => {
+        history[guildId].forEach(entry => {
+            insertCase.run(guildId, entry.case, entry.action, entry.userId, entry.userTag, entry.moderator, entry.reason, entry.duration, entry.action === 'warn' ? 0 : 1, entry.timestamp);
+        });
+    });
+
+    Object.keys(counters).forEach(guildId => setCounter.run(guildId, counters[guildId]));
+
+    db.prepare('SELECT guild_id, MAX(case_number) AS last_case FROM cases GROUP BY guild_id').all()
+        .forEach(row => setCounter.run(row.guild_id, row.last_case));
+
+    const findMatch = db.prepare(`
+        SELECT case_number FROM cases
+        WHERE guild_id = ? AND user_id = ? AND action = 'warn' AND active = 0 AND reason IS ? AND ABS(timestamp - ?) <= ?
+        ORDER BY ABS(timestamp - ?) LIMIT 1
+    `);
+    const activate = db.prepare('UPDATE cases SET active = 1 WHERE guild_id = ? AND case_number = ?');
+
+    Object.keys(warnings).forEach(guildId => {
+        Object.keys(warnings[guildId]).forEach(userId => {
+            warnings[guildId][userId].forEach(warning => {
+                const match = findMatch.get(guildId, userId, warning.reason, warning.timestamp, WARNING_MATCH_WINDOW, warning.timestamp);
+
+                if (match) {
+                    activate.run(guildId, match.case_number);
+                    return;
+                }
+
+                const caseNumber = nextCase(guildId);
+
+                insertCase.run(guildId, caseNumber, 'warn', userId, null, warning.moderator, warning.reason, null, 1, warning.timestamp);
+            });
+        });
+    });
+
+    retireLegacy('modCases.json');
+    retireLegacy('modHistory.json');
+    retireLegacy('warnings.json');
+});
 
 const ACTIONS = {
     ban: { emoji: '🔨', label: 'Ban', color: 0xE74C3C },
@@ -20,50 +73,50 @@ const ACTIONS = {
     role: { emoji: '🎭', label: 'Role Change', color: 0x5865F2 },
 };
 
-const readCases = () => store.read();
-
-const nextCase = (guildId) => {
-    const cases = readCases();
-    const current = cases[guildId] || 0;
-    const updated = current + 1;
-
-    cases[guildId] = updated;
-
-    store.write(cases);
-
-    return updated;
-};
-
-const readHistory = () => historyStore.read();
+// A function declaration so the migration above can use it before this line runs.
+function nextCase(guildId) {
+    return db.prepare(`
+        INSERT INTO case_counters (guild_id, last_case) VALUES (?, 1)
+        ON CONFLICT (guild_id) DO UPDATE SET last_case = last_case + 1
+        RETURNING last_case
+    `).get(guildId).last_case;
+}
 
 const recordCase = (guildId, caseNumber, options) => {
-    const history = readHistory();
+    db.prepare(`
+        INSERT INTO cases (guild_id, case_number, action, user_id, user_tag, moderator, reason, duration, active, timestamp)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1, ?)
+    `).run(
+        guildId,
+        caseNumber,
+        options.action,
+        options.target ? options.target.id : null,
+        options.target ? (options.target.tag || options.target.username) : null,
+        options.moderator ? (options.moderator.tag || options.moderator.username) : null,
+        options.reason || null,
+        options.duration || null,
+        Date.now(),
+    );
+};
 
-    if (!history[guildId]) history[guildId] = [];
-
-    history[guildId].push({
-        case: caseNumber,
-        action: options.action,
-        userId: options.target ? options.target.id : null,
-        userTag: options.target ? (options.target.tag || options.target.username) : null,
-        moderator: options.moderator ? (options.moderator.tag || options.moderator.username) : null,
-        reason: options.reason || null,
-        duration: options.duration || null,
-        timestamp: Date.now(),
-    });
-
-    if (history[guildId].length > HISTORY_LIMIT) {
-        history[guildId] = history[guildId].slice(-HISTORY_LIMIT);
-    }
-
-    historyStore.write(history);
+const toCase = (row) => {
+    return {
+        case: row.case_number,
+        action: row.action,
+        userId: row.user_id,
+        userTag: row.user_tag,
+        moderator: row.moderator,
+        reason: row.reason,
+        duration: row.duration,
+        active: row.active === 1,
+        timestamp: row.timestamp,
+    };
 };
 
 const getUserCases = (guildId, userId) => {
-    const history = readHistory();
-    const guildHistory = history[guildId] || [];
-
-    return guildHistory.filter(entry => entry.userId === userId);
+    return db.prepare('SELECT * FROM cases WHERE guild_id = ? AND user_id = ? ORDER BY case_number')
+        .all(guildId, userId)
+        .map(toCase);
 };
 
 const modlogChannel = (guild) => {
@@ -157,4 +210,4 @@ const logAction = async (options) => {
     return caseNumber;
 };
 
-module.exports = { logAction, postModlog, getUserCases, readHistory, ACTIONS };
+module.exports = { logAction, postModlog, getUserCases, ACTIONS };

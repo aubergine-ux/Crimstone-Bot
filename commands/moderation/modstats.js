@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, InteractionContextType } = require('discord.js');
 const { getUserCases, ACTIONS } = require('../utility/modLog.js');
-const { readWarnings } = require('../utility/warnStore.js');
+const { getWarnings } = require('../utility/warnStore.js');
 
 const RECENT_LIMIT = 8;
 
@@ -29,8 +29,7 @@ module.exports = {
 
         const cases = getUserCases(guildId, user.id);
 
-        const warnings = readWarnings();
-        const activeWarnings = (warnings[guildId] || {})[user.id] || [];
+        const activeWarnings = getWarnings(guildId, user.id);
 
         const counts = {};
 

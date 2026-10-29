@@ -1,5 +1,5 @@
 const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits, InteractionContextType } = require('discord.js');
-const { readLevels, writeLevels } = require('../utility/levelStore.js');
+const { removeMember, removeGuild, countMembers } = require('../utility/levelStore.js');
 const { syncLevelRoles } = require('../utility/applyLevelRoles.js');
 
 const CONFIRM_TIME = 30000;
@@ -33,16 +33,10 @@ module.exports = {
         const guildId = interaction.guild.id;
 
         if (user) {
-            const levels = readLevels();
-
-            if (!levels[guildId] || !levels[guildId][user.id]) {
+            if (!removeMember(guildId, user.id)) {
                 await interaction.reply({ content: `**${user.username}** has no XP to reset.` });
                 return;
             }
-
-            delete levels[guildId][user.id];
-
-            writeLevels(levels);
 
             const embed = new EmbedBuilder()
                 .setColor(0x5865F2)
@@ -56,8 +50,7 @@ module.exports = {
             return;
         }
 
-        const levels = readLevels();
-        const count = Object.keys(levels[guildId] || {}).length;
+        const count = countMembers(guildId);
 
         if (count === 0) {
             await interaction.reply({ content: 'No one in this server has any XP yet.' });
@@ -87,11 +80,7 @@ module.exports = {
             return;
         }
 
-        const fresh = readLevels();
-
-        delete fresh[guildId];
-
-        writeLevels(fresh);
+        removeGuild(guildId);
 
         await button.update({
             content: `✅ Reset XP for **${count}** member${count === 1 ? '' : 's'}.\nLevel reward roles were left as they are — run \`/levelsync\` to remove them.`,

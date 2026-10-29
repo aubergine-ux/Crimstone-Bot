@@ -1,6 +1,6 @@
 const { SlashCommandBuilder, EmbedBuilder, InteractionContextType } = require('discord.js');
 const { getActivity, dayKey } = require('../utility/activityStore.js');
-const { readLevels } = require('../utility/levelStore.js');
+const { guildRanking } = require('../utility/levelStore.js');
 const { getLevelFromXp } = require('../utility/levelMath.js');
 
 const TOP_CHANNELS = 3;
@@ -32,8 +32,7 @@ module.exports = {
             .slice(0, TOP_CHANNELS)
             .map(entry => `<#${entry[0]}> — ${formatNumber(entry[1])}`);
 
-        const guildLevels = readLevels()[guild.id] || {};
-        const ranked = Object.entries(guildLevels).sort((a, b) => b[1] - a[1]);
+        const ranked = guildRanking(guild.id);
         const totalXp = ranked.reduce((total, entry) => total + entry[1], 0);
 
         let topMember = 'Nobody yet';

@@ -1,6 +1,6 @@
 const { PermissionFlagsBits } = require('discord.js');
 const { rolesForLevel } = require('./levelRoles.js');
-const { readLevels } = require('./levelStore.js');
+const { getXp } = require('./levelStore.js');
 const { getLevelFromXp } = require('./levelMath.js');
 
 const updateLevelRoles = async (member, level) => {
@@ -55,9 +55,7 @@ const applyLevelRoles = async (member, level) => {
 const syncLevelRoles = async (member) => {
     if (member.user.bot) return { added: [], removed: [] };
 
-    const levels = readLevels();
-    const guildLevels = levels[member.guild.id] || {};
-    const { level } = getLevelFromXp(guildLevels[member.id] || 0);
+    const { level } = getLevelFromXp(getXp(member.guild.id, member.id));
 
     return updateLevelRoles(member, level);
 };
