@@ -19,7 +19,7 @@ A Discord bot built with [Discord.js](https://discord.js.org/)! ~ invite it to y
 
 ## Features
 
-- **Moderation** - Complete server management with `ban`, `kick`, `timeout`, `purge` messages, and `echo` tools, plus a per-member history lookup with `modstats` and automatic punishments when members reach a number of warnings (`warnrules`).
+- **Moderation** - Complete server management with `ban`, `kick`, `timeout`, `untimeout`, `purge` messages, and `echo` tools, plus a per-member history lookup with `modstats`, case lookups and reason edits with `case`, and automatic punishments when members reach a number of warnings (`warnrules`).
 - **Levelling** - Members earn XP as they chat or talk in voice, with rank cards (`rank`), role rewards (`levelrole`), XP boosts (`xpboost`), custom level-up messages, and daily streaks, and server, weekly, monthly or global leaderboards (`leaderboard`).
 - **Automod** - Spam timeouts, invite, link and word filters, raid alerts and a minimum account age, set up with `automod`.
 - **Welcome** - Join and leave messages and auto roles (`welcome`), plus self-assign role buttons (`buttonroles`).
@@ -45,7 +45,9 @@ Members earn XP for chatting, on a 10 second cooldown per member. With `/config 
 | `/config levelmessage` | Write your own level-up message with `{user}`, `{username}`, `{level}` and `{server}` |
 | `/givexp`, `/setxp` | Adjust a member's XP by hand |
 | `/resetxp [target]` | Reset one member's XP, or the whole server's after a confirmation |
-| `/importxp [mode]` | Import XP from a public MEE6 leaderboard — levels carry over exactly |
+| `/importxp [mode] [file]` | Import XP from a public MEE6 leaderboard (levels carry over exactly) or from an `/exportxp` file |
+| `/exportxp` | Download every member's XP, level, messages and voice time as a JSON file |
+| `/noxp` | Stop members with chosen roles from earning XP in chat or voice |
 | `/levelsync` | Give or remove reward roles so every member matches their level |
 
 Reward roles are also restored when a member rejoins, and updated whenever `/givexp`, `/setxp` or `/resetxp` changes their level.
@@ -73,6 +75,7 @@ Every warning is a case in the moderation history, so `/modstats` shows them alo
 | `/warnrules add` | Automatically time out, kick or ban a member when they reach a number of warnings, like 3 → 1 hour timeout, 5 → kick |
 | `/warnrules expiry` | Let warnings stop counting after a number of days. Expired warnings stay in the history |
 | `/warnrules list`, `/warnrules remove` | See or remove rules |
+| `/case view`, `/case reason` | Look up any case by number, or correct its reason |
 
 A rule fires once, when a member reaches exactly that many active warnings, and is logged as its own case.
 

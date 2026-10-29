@@ -119,6 +119,16 @@ const getUserCases = (guildId, userId) => {
         .map(toCase);
 };
 
+const getCase = (guildId, caseNumber) => {
+    const row = db.prepare('SELECT * FROM cases WHERE guild_id = ? AND case_number = ?').get(guildId, caseNumber);
+
+    return row ? toCase(row) : null;
+};
+
+const setCaseReason = (guildId, caseNumber, reason) => {
+    return db.prepare('UPDATE cases SET reason = ? WHERE guild_id = ? AND case_number = ?').run(reason, guildId, caseNumber).changes > 0;
+};
+
 const modlogChannel = (guild) => {
     const config = getConfig(guild.id);
 
@@ -210,4 +220,4 @@ const logAction = async (options) => {
     return caseNumber;
 };
 
-module.exports = { logAction, postModlog, getUserCases, ACTIONS };
+module.exports = { logAction, postModlog, getUserCases, getCase, setCaseReason, ACTIONS };

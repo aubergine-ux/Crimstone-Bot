@@ -73,6 +73,9 @@ const announceLevelUp = async (member, level, awarded, channel, config) => {
 const awardXp = async (member, baseAmount, channel) => {
     const guildId = member.guild.id;
     const config = getConfig(guildId);
+
+    if (config.noXpRoles.some(roleId => member.roles.cache.has(roleId))) return 0;
+
     const streak = touchStreak(guildId, member.id);
     const multiplier = boostFor(member, channel, config) * (config.streakBonus ? streakBoost(streak) : 1);
     const gained = Math.round(baseAmount * multiplier);

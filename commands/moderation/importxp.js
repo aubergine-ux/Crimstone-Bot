@@ -3,6 +3,7 @@ const { importXp } = require('../utility/levelStore.js');
 
 const PAGE_LIMIT = 1000;
 const MAX_PAGES = 50;
+const MAX_FILE_SIZE = 5000000;
 
 const fetchMee6 = async (guildId) => {
     const players = [];
@@ -27,10 +28,42 @@ const fetchMee6 = async (guildId) => {
     return { players: players };
 };
 
+// Reads a file from /exportxp, a list of { userId, xp }, or a plain { userId: xp } object.
+const readFile = async (attachment) => {
+    if (attachment.size > MAX_FILE_SIZE) return { error: 'That file is too big. Exports are well under 5 MB.' };
+
+    const response = await fetch(attachment.url);
+
+    if (!response.ok) throw new Error(`Attachment download responded with ${response.status}`);
+
+    let data;
+
+    try {
+        data = JSON.parse(await response.text());
+    } catch (error) {
+        return { error: 'That file isn\'t valid JSON. Use a file made by `/exportxp`.' };
+    }
+
+    let list = null;
+
+    if (Array.isArray(data)) list = data;
+    else if (data && Array.isArray(data.members)) list = data.members;
+
+    if (list) {
+        return { players: list.map(entry => ({ id: entry && (entry.userId || entry.id), xp: entry && entry.xp })) };
+    }
+
+    if (data && typeof data === 'object') {
+        return { players: Object.keys(data).map(userId => ({ id: userId, xp: data[userId] })) };
+    }
+
+    return { error: 'I couldn\'t find any XP in that file. Use a file made by `/exportxp`.' };
+};
+
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('importxp')
-        .setDescription('Import XP from the MEE6 leaderboard.')
+        .setDescription('Import XP from the MEE6 leaderboard or an /exportxp file.')
         .setContexts(InteractionContextType.Guild)
         .addStringOption(option =>
             option.setName('mode')
@@ -38,24 +71,28 @@ module.exports = {
                 .setRequired(false)
                 .addChoices(
                     { name: 'Keep whichever is higher', value: 'higher' },
-                    { name: 'Replace with MEE6 XP', value: 'replace' },
-                    { name: 'Add MEE6 XP on top', value: 'add' },
+                    { name: 'Replace with imported XP', value: 'replace' },
+                    { name: 'Add imported XP on top', value: 'add' },
                 ))
+        .addAttachmentOption(option =>
+            option.setName('file').setDescription('An /exportxp file to import instead of MEE6').setRequired(false))
         .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
     async execute(interaction) {
         const mode = interaction.options.getString('mode') || 'higher';
+        const file = interaction.options.getAttachment('file');
         const guildId = interaction.guild.id;
+        const source = file ? 'File' : 'MEE6';
 
         await interaction.deferReply();
 
         let result;
 
         try {
-            result = await fetchMee6(guildId);
+            result = file ? await readFile(file) : await fetchMee6(guildId);
         } catch (error) {
-            console.error('Failed to import MEE6 XP:', error);
-            await interaction.editReply({ content: '❌ I couldn\'t read the MEE6 leaderboard. Please try again later!' });
+            console.error(`Failed to import ${source} XP:`, error);
+            await interaction.editReply({ content: file ? '❌ I couldn\'t download that file. Please try again!' : '❌ I couldn\'t read the MEE6 leaderboard. Please try again later!' });
             return;
         }
 
@@ -67,7 +104,7 @@ module.exports = {
         const players = result.players;
 
         if (players.length === 0) {
-            await interaction.editReply({ content: 'The MEE6 leaderboard for this server is empty, so there\'s nothing to import.' });
+            await interaction.editReply({ content: file ? 'That file has no members in it, so there\'s nothing to import.' : 'The MEE6 leaderboard for this server is empty, so there\'s nothing to import.' });
             return;
         }
 
@@ -90,12 +127,13 @@ module.exports = {
 
         const imported = entries.length;
 
-        const modeNames = { higher: 'Kept whichever was higher', replace: 'Replaced with MEE6 XP', add: 'Added MEE6 XP on top' };
+        const modeNames = { higher: 'Kept whichever was higher', replace: 'Replaced with imported XP', add: 'Added imported XP on top' };
+        const curveNote = file ? '' : '\nMEE6 uses the same level curve, so everyone keeps their level.';
 
         const embed = new EmbedBuilder()
             .setColor(0x5865F2)
-            .setTitle('📥 MEE6 Import Complete')
-            .setDescription(`Imported XP for **${imported}** member${imported === 1 ? '' : 's'}.\nMEE6 uses the same level curve, so everyone keeps their level.\nRun \`/levelsync\` to hand out level reward roles.`)
+            .setTitle(`📥 ${source} Import Complete`)
+            .setDescription(`Imported XP for **${imported}** member${imported === 1 ? '' : 's'}.${curveNote}\nRun \`/levelsync\` to hand out level reward roles.`)
             .setFooter({ text: skipped > 0 ? `${modeNames[mode]} · ${skipped} entries skipped` : modeNames[mode] });
 
         await interaction.editReply({ embeds: [embed] });
