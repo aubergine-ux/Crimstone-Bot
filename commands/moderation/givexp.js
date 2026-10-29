@@ -1,6 +1,7 @@
 const { SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits, InteractionContextType } = require('discord.js');
 const { readLevels, writeLevels } = require('../utility/levelStore.js');
 const { getLevelFromXp } = require('../utility/levelMath.js');
+const { syncLevelRoles } = require('../utility/applyLevelRoles.js');
 
 module.exports = {
     data: new SlashCommandBuilder()
@@ -37,5 +38,9 @@ module.exports = {
             .setDescription(`✅ Gave **${user.username}** **${amount}** XP. New total: **${newTotal}** (Level ${level}).`);
 
         await interaction.reply({ embeds: [embed] });
+
+        const member = interaction.options.getMember('target');
+
+        if (member) await syncLevelRoles(member);
     }
 };

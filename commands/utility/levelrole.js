@@ -66,7 +66,7 @@ module.exports = {
 
             setLevelRole(guildId, level, role.id);
 
-            await interaction.reply({ content: `✅ Members reaching level **${level}** will now get <@&${role.id}>.` });
+            await interaction.reply({ content: `✅ Members reaching level **${level}** will now get <@&${role.id}>.\nRun \`/levelsync\` to give it to members who are already past level ${level}.` });
             return;
         }
 

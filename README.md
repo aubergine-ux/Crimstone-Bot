@@ -11,12 +11,19 @@ A Discord bot built with [Discord.js](https://discord.js.org/)! ~ invite it to y
 
 📨 **Invite Crimstone:** [Add to your server](https://discord.com/oauth2/authorize?client_id=1507721065235877958)
 
+💬 **Support server:** [discord.gg/K9rPg4Knc](https://discord.gg/K9rPg4Knc)
+
+🗳️ **Vote:** [top.gg](https://top.gg/bot/1507721065235877958/vote)
+
 ---
 
 ## Features
 
 - **Moderation** - Complete server management with `ban`, `kick`, `timeout`, `purge` messages, and `echo` tools, plus a per-member history lookup with `modstats`.
-- **Levelling** - Members earn XP as they chat, with rank cards (`rank`), role rewards (`levelrole`), and server or global leaderboards (`leaderboard`).
+- **Levelling** - Members earn XP as they chat or talk in voice, with rank cards (`rank`), role rewards (`levelrole`), XP boosts (`xpboost`), custom level-up messages, and server or global leaderboards (`leaderboard`).
+- **Automod** - Spam timeouts, invite, link and word filters, raid alerts and a minimum account age, set up with `automod`.
+- **Welcome** - Join and leave messages and auto roles (`welcome`), plus self-assign role buttons (`buttonroles`).
+- **Community** - Button-entry giveaways with level requirements (`giveaway`), a starboard (`starboard`), private support tickets with transcripts (`ticket`), and YouTube and Twitch alerts (`alerts`).
 - **Audit log** - Seven independently controlled categories of server activity, set up with `auditlog`.
 - **Tools** - Minecraft tracking integrations, including checking server statuses (`mcstatus`) and retrieving user avatar textures (`mcskin`).
 - **Utility** - Essential client diagnostics including `ping`, `avatar` lookup, `server` info, `user` profiles, activity stats (`serverstats`), reminders (`reminder`), deleted message recall (`snipe`), an embed builder (`embed`), a quick reference `guide`, and automated command hot-reloads (`reload`).
@@ -26,14 +33,21 @@ A Discord bot built with [Discord.js](https://discord.js.org/)! ~ invite it to y
 
 ## Levelling
 
-Members earn XP for chatting, on a 10 second cooldown per member.
+Members earn XP for chatting, on a 10 second cooldown per member. With `/config voicexp` on, they also earn XP every minute they talk in voice with at least one other person. Muted, deafened and AFK-channel members don't earn voice XP.
 
 | Command | What it does |
 | --- | --- |
 | `/rank [target]` | A rank card showing level, progress, server rank and global rank |
 | `/leaderboard [scope]` | Top members — this server, global combined XP, or global best server |
 | `/levelrole` | Set up roles awarded at chosen levels |
+| `/xpboost` | Multiply XP for chosen roles or channels (a member's best role boost × the channel boost) |
+| `/config levelmessage` | Write your own level-up message with `{user}`, `{username}`, `{level}` and `{server}` |
 | `/givexp`, `/setxp` | Adjust a member's XP by hand |
+| `/resetxp [target]` | Reset one member's XP, or the whole server's after a confirmation |
+| `/importxp [mode]` | Import XP from a public MEE6 leaderboard — levels carry over exactly |
+| `/levelsync` | Give or remove reward roles so every member matches their level |
+
+Reward roles are also restored when a member rejoins, and updated whenever `/givexp`, `/setxp` or `/resetxp` changes their level.
 
 `/leaderboard` has three scopes:
 
@@ -63,6 +77,42 @@ Use `/auditlog view` to see the current setup, and `/auditlog reset` to clear it
 
 ---
 
+## Automod
+
+Every rule starts off. Turn them on with `/automod`, and set a mod log with `/config modlog` so actions and raid alerts are recorded. Members with Manage Messages, and any roles or channels added with `/automod exempt`, are never filtered.
+
+| Rule | What it does |
+| --- | --- |
+| `spam` | Deletes a burst of messages (5 in 5 seconds by default) and times the member out |
+| `invites` | Removes Discord server invites |
+| `links` | Removes every link |
+| `words` | Removes messages containing a blocked word or phrase |
+| `raid` | Alerts the mod log when lots of members join at once |
+| `accountage` | Kicks accounts younger than a set number of days as they join, with a DM explaining why |
+
+---
+
+## Welcome and roles
+
+- `/welcome join` and `/welcome leave` post a message when members come and go. Messages can use `{user}`, `{username}`, `{server}` and `{count}`. Try them with `/welcome test`.
+- `/welcome autorole` gives up to five roles to every new member. Members still on the rules screen get them once they accept.
+- `/buttonroles` posts a message with up to five buttons members click to add or remove a role.
+
+---
+
+## Community
+
+| Command | What it does |
+| --- | --- |
+| `/giveaway start` | A giveaway members enter with a button, optionally needing a minimum level. End it early, cancel or reroll it later |
+| `/starboard setup` | Reposts messages that reach a number of ⭐ (or any emoji) to a highlights channel. Self-stars and bots don't count |
+| `/ticket setup`, `/ticket panel` | A button that opens a private channel with the support role. Closing saves a transcript to the log channel and the member's DMs |
+| `/alerts add` | Posts when a YouTube channel uploads or a Twitch streamer goes live, checked every 3 minutes |
+
+YouTube alerts work out of the box. Twitch alerts need `TWITCH_CLIENT_ID` and `TWITCH_CLIENT_SECRET` in `.env`, from an application at [dev.twitch.tv/console](https://dev.twitch.tv/console).
+
+---
+
 ## Data storage
 
 Crimstone keeps its data in JSON files next to the commands that use them, all through a shared store (`commands/utility/jsonStore.js`) that:
@@ -84,7 +134,8 @@ Crimstone keeps its data in JSON files next to the commands that use them, all t
 ### Steps
 1. Clone the repo and run `npm install`
 2. Create `config.json` and `.env` with your bot token and client ID
-3. Run `node deploy-commands.js` to register commands
-4. Start the bot with `node index.js`
+3. Optionally add `TWITCH_CLIENT_ID` and `TWITCH_CLIENT_SECRET` for Twitch alerts, and `TOPGG_TOKEN` to `.env` (from your bot's top.gg page → Edit → Webhooks). With it, `/vote` shows whether a member has voted and the server count is posted to top.gg every 30 minutes.
+4. Run `node deploy-commands.js` to register commands
+5. Start the bot with `node index.js`
 
 ---

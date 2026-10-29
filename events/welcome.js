@@ -1,6 +1,7 @@
 const { Events } = require('discord.js');
 const { checkJoin, wasAutoKicked } = require('../commands/utility/automodEngine.js');
 const { sendGreeting, giveAutoRoles } = require('../commands/utility/welcomeConfig.js');
+const { syncLevelRoles } = require('../commands/utility/applyLevelRoles.js');
 
 module.exports = [
     {
@@ -10,7 +11,10 @@ module.exports = [
             try {
                 if (await checkJoin(member)) return;
 
-                if (!member.pending) await giveAutoRoles(member);
+                if (!member.pending) {
+                    await giveAutoRoles(member);
+                    await syncLevelRoles(member);
+                }
 
                 await sendGreeting(member, 'join');
             } catch (error) {
@@ -22,7 +26,14 @@ module.exports = [
         name: Events.GuildMemberUpdate,
 
         async execute(oldMember, newMember) {
-            if (oldMember.pending && !newMember.pending) await giveAutoRoles(newMember);
+            if (!oldMember.pending || newMember.pending) return;
+
+            try {
+                await giveAutoRoles(newMember);
+                await syncLevelRoles(newMember);
+            } catch (error) {
+                console.error('Failed to set up a member after screening:', error.message);
+            }
         },
     },
     {

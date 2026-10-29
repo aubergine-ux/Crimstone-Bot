@@ -59,7 +59,7 @@ const rolesForLevel = (guildId, level) => {
         .sort((a, b) => a - b);
 
     if (earned.length === 0) {
-        return { toAdd: [], toRemove: [] };
+        return { toAdd: [], toRemove: allRoleIds };
     }
 
     if (stack) {
